@@ -1,0 +1,22 @@
+html {
+    font-size: 13px;
+}
+body > div#app {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    background: #f4f4f4;
+}
+
+main { flex: 1 0 auto; }
+main > .container { margin-top: 10px; }
+
+.flex-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+.card {
+    flex: 1 30em;
+    box-sizing: border-box;
+    margin: 1rem .25em;
+}

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-e2e
+  labels:
+    app: test-e2e
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-e2e
+  template:
+    metadata:
+      labels:
+        app: test-e2e
+    spec:
+      containers:
+        - name: test-e2e
+          image: "test-e2e:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          volumeMounts:
+            - name: screenshots
+              mountPath: /e2e/cypress/screenshots
+            - name: videos
+              mountPath: /e2e/cypress/videos
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+      volumes:
+        - name: screenshots
+          hostPath:
+            path: /tmp/cypress-screenshots
+            type: Directory
+        - name: videos
+          hostPath:
+            path: /tmp/cypress-videos
+            type: Directory

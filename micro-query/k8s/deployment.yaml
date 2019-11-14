@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: micro-query
+  labels:
+    app: micro-query
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: micro-query
+  template:
+    metadata:
+      labels:
+        app: micro-query
+    spec:
+      containers:
+        - name: micro-query
+          image: "micro-query:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"

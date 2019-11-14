@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: archean-monitor
+  labels:
+    app: archean-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: archean-monitor
+  template:
+    metadata:
+      labels:
+        app: archean-monitor
+    spec:
+      containers:
+        - name: archean-monitor
+          image: "archean-monitor:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
