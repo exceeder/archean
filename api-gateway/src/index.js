@@ -25,7 +25,7 @@ app.use("/", async (req, res) => {
     } else if (req.originalUrl === "/v1/api-gateway/targets") {
         defaultApi(req,res);
     } else {
-        res.status(404).send("Gateway did not match " + req.originalUrl + " to any of: "+JSON.stringify(registry.targets))
+        res.status(404).send("Gateway did not match " + req.originalUrl + " to any of the targets: "+JSON.stringify(registry.targets))
     }
 })
 

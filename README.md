@@ -22,11 +22,14 @@ Archean was an eon in Earth history, back when all living things were pretty sim
 **Note**: do not run it in production - security 
 was not a main concern, it is a learning and testing project!
 
-This demo is meant to run under [Kubernetes](https://www.docker.com/blog/kubernetes-is-now-available-in-docker-desktop-stable-channel/) using build-in [Kustomize](https://kustomize.io/) and [Skaffold](https://skaffold.dev/docs/quickstart/). All you need is to run 
+This demo is meant to run under [Kubernetes](https://www.docker.com/blog/kubernetes-is-now-available-in-docker-desktop-stable-channel/) 
+using built-in [Kustomize](https://kustomize.io/) and [Skaffold](https://skaffold.dev/docs/quickstart/). All you need is
+to run 
 ```
 skaffold dev
 ```
-at the root of this project and start fiddling with the code, while things deploy, self-destruct, self-test etc.
+at the root of this project and start fiddling with the code, while things deploy, self-destruct, self-test etc. as you 
+change and save the source files.
 
 Once skaffold pulls the images and starts them, open your browser to http://localhost:30000.
 By default you will land at a simple monitoring page that looks like this (see code in [monitor-archean](/monitor-archean/src/public)):
@@ -85,6 +88,22 @@ pipeline below.
    
 ## Exercises
 
+It is best you open the whole project from the root in your favourite source editor as you can modify and refactor at 
+once.
+
+### Understand routing
+
+API-Gateway listens on Redis channel "heartbeat". All components that wish to receive traffic publish a
+heartbeat message every 2 seconds. This message contains prefix, e.g. "/query", and gateway proxies all requests starting
+with `/query` to one of the hosts that published this message.
+
+1. Open your browser to http://localhost:30000/query (it should print current date time in json)
+2. In `/micro-query` directory find index.js, while everything is running, change `app.get('/query'...)` to a different 
+path
+3. Adjust this path in `pubblisher.publish()` couple of lines below - this is how routing is announced
+4. Inspect how routes change in the monitor UI as you change them in publish()
+5. Adjust the test in test-e2e/cypress/integration/micro_api_spec.js
+
 ### Create your own microservice
 
 1. Copy `/micro-query` directory to a new directory of your choice, say `/micro-foo`
@@ -111,3 +130,8 @@ if you want)
           - src: 'src/**/*.js'
             dest: .
    ```
+   
+### Roadmap
+
+1. Better visibility into e2e-test: access to videos, screenshots and current log
+2. Hygen templates   

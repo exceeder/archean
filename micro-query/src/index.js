@@ -7,10 +7,10 @@ const app = express()
 //process get requests
 app.get("/query", async (req, res) => {
     console.log("query!")
-    res.send(JSON.stringify({query: new Date()}))
+    res.contentType("application/json").send(JSON.stringify({query: new Date()}))
 });
 
-//runing heartbeat; message format is <your own url><CR><prefix>, e.g. "http://192.168.0.1:3000\n/some/path"
+//running heartbeat; message format is <your own url><CR><prefix>, e.g. "http://192.168.0.1:3000\n/some/path"
 const publisher = redis.createClient({host:"redis-master", port:6379})
 publisher
     .on('error', (err) => console.log(err.message))
