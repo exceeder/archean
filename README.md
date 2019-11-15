@@ -1,45 +1,62 @@
 # Archean : A Microservice Playground
 
-Archean is a minimalistic working microservices demo application designed to provide a space to experiment and learn. 
+Archean is a minimalistic microservices demo application designed to provide a space to experiment and learn. 
 It resolves initial setup and configuration pain, without being opinionated about your future stack and architecture.
-
-Archean was an eon, when things were simple. 
 
 This project also helps to learn Docker and Kubernetes basics. Pre-requisites are, you know a little bit about 
 NodeJS and Express. Feel free to fork it with another language / stack, there is nothing specifc to Node.
 
+#### Guiding principels
+
+- minimal dependencies and assumptions
+- lightweight on resources
+- simple to understand and easy to modify
+- testable; encourages TDD
+- follows and encourages best practices
+- resilient and scalable
+
+Archean was an eon in Earth history, back when all living things were pretty simple.   
+
 ## Setup
 
-This demo is meant to run under Kubernetes using Skaffold and Kustomize. Note: do not run it in production - security 
-was not a concern!
+**Note**: do not run it in production - security 
+was not a main concern, it is a learning and testing project!
 
-#### Docker-desktop
-If you do not yet have [docker-desktop](https://www.docker.com/products/docker-desktop) installed, on MacOS, you can simply do
-```
-brew cask install docker
-```
-Find Docker in Applications and start it, then login (sign up if necessary). In Prefrences, enable Kubernetes.
-
-#### Skaffold
-Install [Skaffold](https://github.com/GoogleContainerTools/skaffold); on MacOS you can do
-```
-brew install skaffold
-```
-If you already have Skaffold installed, please, ensure version 1.0.0+.
-
-#### Ready!
-You are all set; switch to the root of this app and run 
-
+This demo is meant to run under [Kubernetes](https://www.docker.com/blog/kubernetes-is-now-available-in-docker-desktop-stable-channel/) using build-in [Kustomize](https://kustomize.io/) and [Skaffold](https://skaffold.dev/docs/quickstart/). All you need is to run 
 ```
 skaffold dev
 ```
+at the root of this project and start fiddling with the code, while things deploy, self-destruct, self-test etc.
 
-Open your browser to http://localhost:30000. In case this port is taken, you can change it 
-in `api-gateway/k8s/service.yaml` (nodePort).
-
+Once skaffold pulls the images and starts them, open your browser to http://localhost:30000.
 By default you will land at a simple monitoring page that looks like this (see code in [monitor-archean](/monitor-archean/src/public)):
 ![screenshot](screenshot.png)
+ 
+In case port 30000 is already used, you can change it in `api-gateway/k8s/service.yaml` (nodePort).
 
+If you do not have it all installed and are on MacOS:
+```
+brew cask install docker
+brew install skaffold
+```
+then you will find Docker in Applications, you need to start it and login. 
+
+If you already have Skaffold installed, please, ensure the version is 1.0.0+.
+
+## Architecture
+
+```
+                          +--http--> [micro1]    ->---heartbeat---+
+                          |                                       |
+(internet)  -->  [api-gateway]                   <------------- [redis]
+                          |                                       |
+                          +--http--> [micro2]    ->---heartbeat---+
+
+```
+
+Note that all of the services are stateless and you can change number of replicas in deployment.yaml for all
+components without loosing the functionality. This way you can achieve HA or horizontal scalability. 
+   
 ## Build and deployment workflow
 
 Directories are organized with a microservice per directory. I.e. it is a flat monorepo.
@@ -65,20 +82,6 @@ pipeline below.
 5. Cleanup
 
    Once you Ctrl+C your `skaffold dev`, everything is stopped and removed from the kube.
-   
-## Architecture
-
-```
-                          +--http--> [micro1]    ->---heartbeat---+
-                          |                                       |
-(internet)  -->  [api-gateway]                   <------------- [redis]
-                          |                                       |
-                          +--http--> [micro2]    ->---heartbeat---+
-
-```
-
-Note that all of the services are stateless and you can change number of replicas in deployment.yaml for all
-components without loosing the functionality. This way you can achieve HA or horizontal scalability. 
    
 ## Exercises
 

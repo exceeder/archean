@@ -4,6 +4,7 @@ metadata:
   name: api-gateway
   labels:
     app: api-gateway
+    repo: archean-micros
 spec:
   replicas: 1
   selector:
@@ -13,6 +14,7 @@ spec:
     metadata:
       labels:
         app: api-gateway
+        repo: archean-micros
     spec:
       containers:
         - name: api-gateway
