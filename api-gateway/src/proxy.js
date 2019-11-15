@@ -30,7 +30,7 @@ class Proxy {
      */
      async proxy(req, res, target) {
         const rewrittenUrl = target.translate(req.originalUrl);
-        console.log("To url " + rewrittenUrl);
+        console.log("-> " + rewrittenUrl);
         try {
             const clientRes = await fetch(rewrittenUrl, { redirect: 'manual' });
             //transfer headers
