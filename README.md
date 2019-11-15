@@ -37,6 +37,9 @@ skaffold dev
 Open your browser to http://localhost:30000. In case this port is taken, you can change it 
 in `api-gateway/k8s/service.yaml` (nodePort).
 
+By default you will land at a simple monitoring page that looks like this (see code in [monitor-archean](/monitor-archean/src/public)):
+![screenshot](screenshot.png)
+
 ## Build and deployment workflow
 
 Directories are organized with a microservice per directory. I.e. it is a flat monorepo.
