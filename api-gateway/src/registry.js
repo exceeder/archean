@@ -36,8 +36,12 @@ const onHeartbeat = (message) => {
 
 const subscribe = function subscribeToHeartBeat(props, onHeartbeat) {
     const subscriber = redis.createClient(props)
-    subscriber.on("message", (_, message) => onHeartbeat(message))
-    subscriber.subscribe(props.channel);
+    subscriber.on('error', (err) => {
+        console.log(err.message);
+    }).on('ready', () => {
+        subscriber.on("message", (_, message) => onHeartbeat(message))
+        subscriber.subscribe(props.channel);
+    });
     return subscriber
 }
 

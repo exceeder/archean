@@ -12,7 +12,13 @@ app.get("/query", async (req, res) => {
 
 //run heartbeat
 const publisher = redis.createClient({host:"redis-master", port:6379})
-setInterval(() => publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:3000\n/query`), 2000)
+publisher
+    .on('error', (err) => console.log(err.message))
+    .on('ready', () =>
+        setInterval(() =>
+            publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/query`), 2000)
+    );
+
 
 //start listening for http requests
 app.listen(port, '0.0.0.0', () => console.log(`Query at ${process.env.MY_POD_IP} listening on port ${port}!`))

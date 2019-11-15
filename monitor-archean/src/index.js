@@ -11,7 +11,7 @@ const kubeNamespace = 'default';
 
 app.use('/archean', express.static(path.join(__dirname, 'public')))
 
-const plainTextPropertiesToObj = text => text.split("\n")
+const convertPlainTextPropertiesToObject = text => text.split("\n")
     .map(l => l.split(":"))
     .filter(s => s.length > 1)
     .reduce((acc, x) => { acc[x[0]] = x[1].trim(); return acc; }, {});
@@ -26,7 +26,7 @@ app.get("/archean/v1/redis-stats", async (req, res) => {
         if (err || !reply) {
             return sendError(res, err);
         }
-        const stats = plainTextPropertiesToObj(reply)
+        const stats = convertPlainTextPropertiesToObject(reply)
         res.send(JSON.stringify({stats:stats}))
     });
 
@@ -70,10 +70,14 @@ app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     }
 })
 
-
 //cluster announcer
 const publisher = redis.createClient({host:"redis-master", port:6379})
-setInterval(() => publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:3000\n/archean`), 2000)
+publisher
+    .on('error', (err) => console.log(err.message))
+    .on('ready', () =>
+        setInterval(() =>
+            publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/archean`), 2000)
+    );
 
 //http server
 app.listen(port, '0.0.0.0', () => console.log(`Updater at IP ${process.env.MY_POD_IP} listening on port ${port}!`))

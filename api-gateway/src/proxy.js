@@ -15,7 +15,7 @@ class Proxy {
      * @param {string} props.gatewayURL - full url of this gateway
      * @example
      *
-     *      new Proxy({gatewayURL: "http://localhost:3000"})
+     *      new Proxy({gatewayURL: "http://localhost:30000"})
      */
     constructor(props) {
         this.gatewayURL = new URL(props.gatewayURL);
@@ -57,6 +57,8 @@ class Proxy {
                 //handle location redirects to hide microservice
                 let newLocation = new URL(value[0]);
                 newLocation.hostname = this.gatewayURL.hostname
+                newLocation.port = this.gatewayURL.port
+                console.log("replacing "+value[0]+" with "+newLocation.href)
                 value[0] = newLocation.href;
             }
             //console.log(key + "->" + value)
