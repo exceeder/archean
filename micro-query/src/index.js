@@ -10,7 +10,7 @@ app.get("/query", async (req, res) => {
     res.send(JSON.stringify({query: new Date()}))
 });
 
-//run heartbeat
+//runing heartbeat; message format is <your own url><CR><prefix>, e.g. "http://192.168.0.1:3000\n/some/path"
 const publisher = redis.createClient({host:"redis-master", port:6379})
 publisher
     .on('error', (err) => console.log(err.message))

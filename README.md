@@ -76,18 +76,22 @@ pipeline below.
                           +--http--> [micro2]    ->---heartbeat---+
 
 ```
+
+Note that all of the services are stateless and you can change number of replicas in deployment.yaml for all
+components without loosing the functionality. This way you can achieve HA or horizontal scalability. 
    
 ## Exercises
 
 ### Create your own microservice
 
-1. Copy `/query` directory to a new directory of your choice, say `/foo`
+1. Copy `/micro-query` directory to a new directory of your choice, say `/micro-foo`
 2. Rename appname in package.json and k8s/deployment.yaml (there are 5 spots)
 3. Add your `/foo` to `./kustomization.yaml|resources` as `- foo/k8s/deployment.yaml`
 4. Copy-paste one of the `build.artifacts` in `skaffold.yaml` and change it to `/foo`
 5. Adjust index.js to your liking
 
-If not yet runnning, run `skaffold dev`
+If not yet running, run `skaffold dev` and hit http://localhost:30000/foo (adjust the path in index.js:19 `publish()` 
+if you want)
 
 ### Make redeployment faster with file sync and nodemon
 
