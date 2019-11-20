@@ -1,69 +1,62 @@
 const redis = require('redis')
-
-const targets = []
+const Target = require('./models/target')
 
 /**
- * Class that contains information about proxy target, usually a microservice running on specific IP and port
- * @type {Target}
+ * Registry of all microservices, contains an array of targets and listens to Redis heartbeat channel
+ * @type {Registry}
  */
-class Target {
-    constructor(baseUrl, prefix) {
-        this.baseUrl = baseUrl
-        this.prefix = prefix
-        this.lastPing = new Date().getTime()
-        this.requestCount = 0;
-        console.log("New app registered: ", this)
+class Registry {
+
+    constructor(props) {
+        this.targets = []
+        this.heartbeat = this.subscribeToHeartBeat(props, message => this.onHeartbeat(message))
+        this.evictInterval = setInterval(() => this.evictStaleTargets(), 5000)
     }
 
-    translate(uri) {
-        this.requestCount++;
-        return this.baseUrl + uri
+    match(uri) {
+        return this.targets.find(t => uri.startsWith(t.prefix))
     }
-}
-exports.Target = Target
 
-const onHeartbeat = (message) => {
-    const [baseUrl, prefix] = message.split("\n");
-    const target = targets.find(t => t.prefix === prefix)
-    if (target) {
-        target.baseUrl = baseUrl
-        target.lastPing = new Date().getTime()
-    } else {
-        targets.push(new Target(baseUrl, prefix))
-        targets.sort((a,b) => a.prefix.length - b.prefix.length)
+    subscribeToHeartBeat(props, onHeartbeat) {
+        const subscriber = redis.createClient(props)
+        subscriber.on('error', (err) => {
+            console.log(err.message);
+        }).on('ready', () => {
+            subscriber.on("message", (_, message) => onHeartbeat(message))
+            subscriber.subscribe(props.channel);
+        });
+        return subscriber
     }
-}
 
-const subscribe = function subscribeToHeartBeat(props, onHeartbeat) {
-    const subscriber = redis.createClient(props)
-    subscriber.on('error', (err) => {
-        console.log(err.message);
-    }).on('ready', () => {
-        subscriber.on("message", (_, message) => onHeartbeat(message))
-        subscriber.subscribe(props.channel);
-    });
-    return subscriber
-}
-
-const evictStaleTargets = () => {
-    const currentTime = new Date().getTime()
-    const staleTargets = targets.filter( t => currentTime - t.lastPing > 5000);
-    staleTargets.forEach(t => targets.splice(targets.findIndex(e => e === t),1));
-}
-
-function createRegistry(props) {
-    const interval = setInterval(evictStaleTargets, 5000)
-    return {
-        targets: targets,
-        heartbeat: subscribe(props, onHeartbeat),
-        match(uri) {
-            return this.targets.find(t => uri.startsWith(t.prefix))
-        },
-        close() {
-            this.heartbeat.close()
-            clearInterval(interval);
+    onHeartbeat(message) {
+        const [baseUrl, prefix] = message.split("\n");
+        const target = this.targets.find(t => t.prefix === prefix)
+        if (target) {
+            //requests will distribute based on who is pinging
+            target.ping(baseUrl)
+        } else {
+            this.registerTarget(baseUrl, prefix)
         }
     }
+
+    registerTarget(baseUrl, prefix) {
+        const target = new Target(baseUrl, prefix);
+        this.targets.push(target)
+        //sort with longest prefix first
+        this.targets.sort((a,b) => a.prefix.length - b.prefix.length)
+        console.log("New app registered: ", target)
+    }
+
+    evictStaleTargets() {
+        const currentTime = new Date().getTime()
+        const staleTargets = this.targets.filter( t => currentTime - t.lastPing > 5000);
+        staleTargets.forEach(t => this.targets.splice(this.targets.findIndex(e => e === t),1));
+    }
+
+    close() {
+        this.heartbeat.close()
+        clearInterval(this.evictInterval);
+    }
 }
 
-exports = module.exports = createRegistry
+module.exports = Registry

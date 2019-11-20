@@ -21,7 +21,7 @@ const sendError = (res, err) =>  res.status(500)
     .send(JSON.stringify({error: err ? err.message : '?'}))
 
 app.get("/archean/v1/redis-stats", async (req, res) => {
-    const client = redis.createClient({host:"redis-master", port:6379})
+    const client = redis.createClient({host:"backend-redis", port:6379})
     client.info((err, reply) => {
         if (err || !reply) {
             return sendError(res, err);
@@ -50,6 +50,67 @@ app.get("/archean/v1/pods", async (req, res) => {
     }
 })
 
+let kubeEvents = [];
+
+function sseData(req, res) {
+    let messageId = 0;
+
+    const intervalId = setInterval(() => {
+        while (kubeEvents.length > 0) {
+            res.write(`id: ${messageId}\n`);
+            res.write(`data: ${kubeEvents[0]}\n\n`);
+            messageId += 1;
+            kubeEvents.splice(0,1);
+        }
+        res.write(`id: ${messageId}\n`);
+        res.write(`data: PING\n\n`);
+    }, 2000);
+
+    req.on('close', () => {
+        clearInterval(intervalId);
+    });
+
+    req.on('timeout', () => { res.close(); } );
+}
+
+let subscription = false;
+async function subscribeToKubeEvents() {
+    if (subscription) return;
+    try {
+        const client = await getKubeClent()
+        const events = await client.apis.apps.v1.watch.namespaces('default').deployments.getObjectStream()
+        //const jsonStream = new JSONStream()
+        //stream.pipe(jsonStream)
+        events.on('data', object => {
+            //const status =  object.object.status.conditions ? object.object.status.conditions.map(c =>  JSON.stringify(c)).join(";") :
+                JSON.stringify(object.object.status);
+            //console.log(object.type,"name:",object.object.metadata.name,"ts:",object.object.metadata.creationTimestamp,"info:",status);
+            kubeEvents.push(JSON.stringify({action:object.type, name:object.object.metadata.name}))
+            //console.log('Event: ', JSON.stringify(object, null, 2))
+        })
+        events.on('error', err => {
+            console.log("Stream error",err);
+        })
+        subscription = true;
+    } catch (e) {
+        console.log("Error: ",e);
+    }
+}
+
+
+app.get('/archean/v1/events', async (req, res) => {
+    // SSE Setup
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+    res.write('\n');
+
+    sseData(req, res);
+    await subscribeToKubeEvents();
+});
+
 app.get("/archean/v1/deployments", async (req, res) => {
     try {
         const client = await getKubeClent()
@@ -60,7 +121,6 @@ app.get("/archean/v1/deployments", async (req, res) => {
         sendError(res, e)
     }
 })
-
 
 app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     try {
@@ -73,7 +133,7 @@ app.get("/archean/v1/pods/:name/logs", async (req, res) => {
 })
 
 //cluster announcer
-const publisher = redis.createClient({host:"redis-master", port:6379})
+const publisher = redis.createClient({host:"backend-redis", port:6379})
 publisher
     .on('error', (err) => console.log(err.message))
     .on('ready', () =>

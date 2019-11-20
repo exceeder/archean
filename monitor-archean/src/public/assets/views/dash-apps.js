@@ -3,10 +3,7 @@ import store from "../stores/dashboard-store.js"
 export default {
     template: `
 <section>
-<h5>
-  <a class="btn-floating btn-small waves-effect waves-light right" @click="refreshApps()"><i class="material-icons refresh">refresh</i></a>
-  Microservices
-</h5>
+<h5>Microservices</h5>
 <div class="flex-wrap">
    <app-card v-for="app in apps" :key="app.baseUrl" :title="app.prefix">             
        <ul class="left-align">                   
@@ -16,7 +13,8 @@ export default {
        </ul>               
    </app-card>
 </div>
-</section>
+ <a class="right" href="#monitor" @click="refreshApps()">reload</a>
+</section> 
 `,
     store,
     mounted() {

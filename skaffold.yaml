@@ -12,14 +12,14 @@ build:
             dest: .
     - image: test-e2e
       context: ./test-e2e/
-#      sync:
-#        manual:
-#          - src: 'cypress/**/*.js'
-#            dest: .
-      # use the space below to add your own micros
-    - image: micro-query
-      context: ./micro-query/
-
+      sync:
+        manual:
+          - src: 'cypress/**/*.js'
+            dest: .
+    - image: micro-hello
+      context: ./micro-hello/
 
 deploy:
   kustomize: {}
+
+#todo for test-e2e avoid rebuilds by syncing test scripts only

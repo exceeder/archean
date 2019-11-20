@@ -16,15 +16,20 @@
 <body>
 
 <div id="app">
-  <app-header></app-header>
+  <app-header>
+    <ul class="right hide-on-med-and-down" >
+      <li :class="currentTab === 'monitor' ? 'active' : ''"><a href="#monitor" @click="selectTab('monitor')">Monitor</a></li>
+      <li :class="currentTab === 'overview' ? 'active' : ''"><a href="#overview" @click="selectTab('overview')">Overview</a></li>
+      <li :class="currentTab.startsWith('e2e-') ? 'active' : ''"><a href="#e2e-logs" @click="selectTab('e2e-logs')">E2E Tests</a></li>
+    </ul>
+  </app-header>
 
   <app-main>
-    <dashboard/>
+    <dashboard :active-tab="currentTab"/>
   </app-main>
 
   <app-footer></app-footer>
 </div>
-<script src="assets/js3d/three.js"></script>
 <script type="module" src="./assets/app.js" crossorigin="use-credentials"></script>
 </body>
 </html>

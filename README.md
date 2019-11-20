@@ -49,16 +49,31 @@ If you already have Skaffold installed, please, ensure the version is 1.0.0+.
 ## Architecture
 
 ```
-                          +--http--> [micro1]    ->---heartbeat---+
+                          +--http--> [hello]     ->---heartbeat---+
                           |                                       |
 (internet)  -->  [api-gateway]                   <------------- [redis]
                           |                                       |
-                          +--http--> [micro2]    ->---heartbeat---+
+                          +--http--> [a-micro]   ->---heartbeat---+  
+                          ...
 
 ```
 
-Note that all of the services are stateless and you can change number of replicas in deployment.yaml for all
+Note that all of the services are stateless and you can change the number of replicas in deployment.yaml for all
 components without loosing the functionality. This way you can achieve HA or horizontal scalability. 
+
+## Directories
+
+`_tempates` contains Hygen templates to speed up development
+
+`api-gateway` rudimentary but functional [api gateway](https://microservices.io/patterns/apigateway.html)
+
+`backend-redis` stock deployment of Redis server into your Kubernetes cluster
+
+`micro-hello` example of the hello-world microservice, minimal implementation
+
+`monitor-archean` a monitoring application working as a microservice with UI
+
+`test-e2e` end-to-end testing with [Cypress](http://cypress.io), check out cypress/integration
    
 ## Build and deployment workflow
 
@@ -85,7 +100,7 @@ pipeline below.
 5. Cleanup
 
    Once you Ctrl+C your `skaffold dev`, everything is stopped and removed from the kube.
-   
+      
 ## Exercises
 
 It is best you open the whole project from the root in your favourite source editor as you can modify and refactor at 
@@ -130,8 +145,17 @@ if you want)
           - src: 'src/**/*.js'
             dest: .
    ```
-   
-### Roadmap
 
-1. Better visibility into e2e-test: access to videos, screenshots and current log
-2. Hygen templates   
+### Hygen templates
+
+Install [Hygen](https://www.hygen.io/quick-start/) if not done so.
+Create new micro (can be done in parallel while skaffold is running) using the command:
+```
+hygen node-micro new <some-name> 
+```
+   
+### Roadmap / TODO
+
+1. Improve k8s event handling, show stopping/starting containers, animate
+2. Improve deployments with liveness probes as per https://blog.risingstack.com/graceful-shutdown-node-js-kubernetes/
+3. Fix / cleanup 3d overview

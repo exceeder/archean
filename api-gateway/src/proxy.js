@@ -48,6 +48,7 @@ class Proxy {
 
     /**
      * Copy headers from HTTP client response to HTTP server response
+     * Adjust HTTP redirects location to hit this gateway
      * @param clientRes - client response (coming from downstream)
      * @param serverRes - server response (will be sent upstream)
      */

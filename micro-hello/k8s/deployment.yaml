@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: micro-query
+  name: micro-hello
   labels:
-    app: micro-query
+    app: micro-hello
     repo: archean-micros
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: micro-query
+      app: micro-hello
   template:
     metadata:
       labels:
-        app: micro-query
+        app: micro-hello
         repo: archean-micros
     spec:
       containers:
-        - name: micro-query
-          image: "micro-query:latest"
+        - name: micro-hello
+          image: "micro-hello:latest"
           imagePullPolicy: IfNotPresent
           env:
           - name: MY_POD_IP
