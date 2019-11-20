@@ -85,13 +85,13 @@ pipeline below.
 
 1. Build
 
-   Uses `<module>/Dockerfile`, and produces a Docker image
+   Uses `<module>/Dockerfile`, and produces a local Docker image
 2. Tag
 
    Tags images according to skaffold.yaml/build.artifacts.image name
 3. Deploy
 
-   Deploys each artifact according to kustomization.yaml into pods and services, such that each micro gets its own IP 
+   Deploys each artifact according to `kustomization.yaml` into pods and services, such that each micro gets its own IP 
    address and you can experiment with scaling and tuning.
 4. File Sync
 
@@ -109,11 +109,11 @@ once.
 ### Understand routing
 
 API-Gateway listens on Redis channel "heartbeat". All components that wish to receive traffic publish a
-heartbeat message every 2 seconds. This message contains prefix, e.g. "/query", and gateway proxies all requests starting
-with `/query` to one of the hosts that published this message.
+heartbeat message every 2 seconds. This message contains prefix, e.g. "/hello", and gateway proxies all requests starting
+with `/hello` to one of the hosts that published this message.
 
-1. Open your browser to http://localhost:30000/query (it should print current date time in json)
-2. In `/micro-query` directory find index.js, while everything is running, change `app.get('/query'...)` to a different 
+1. Open your browser to http://localhost:30000/hello (it should print current date time in json)
+2. In `/micro-hello` directory find index.js, while everything is running, change `app.get('/hello'...)` to a different 
 path
 3. Adjust this path in `pubblisher.publish()` couple of lines below - this is how routing is announced
 4. Inspect how routes change in the monitor UI as you change them in publish()
@@ -121,7 +121,9 @@ path
 
 ### Create your own microservice
 
-1. Copy `/micro-query` directory to a new directory of your choice, say `/micro-foo`
+You can simply do `hygen micro new foo` to let templates do it, or follow the steps below.
+
+1. Copy `/micro-hello` directory to a new directory of your choice, say `/micro-foo`. 
 2. Rename appname in package.json and k8s/deployment.yaml (there are 5 spots)
 3. Add your `/foo` to `./kustomization.yaml|resources` as `- foo/k8s/deployment.yaml`
 4. Copy-paste one of the `build.artifacts` in `skaffold.yaml` and change it to `/foo`
@@ -151,7 +153,7 @@ if you want)
 Install [Hygen](https://www.hygen.io/quick-start/) if not done so.
 Create new micro (can be done in parallel while skaffold is running) using the command:
 ```
-hygen node-micro new <some-name> 
+hygen micro new <some-name> 
 ```
    
 ### Roadmap / TODO
