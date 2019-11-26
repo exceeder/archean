@@ -1,37 +1,19 @@
 const express = require('express')
-const redis = require('redis')
-const {findInDir, ansiStrip} = require('./utils')
+const redis = require('redis');
+const {findInDir, stripAnsiCodes} = require('./utils/utils')
+const initSSE = require('./utils/sse-utils')
+const createRedisClient = require('./utils/redis-utils')
 
-const MAX_LOG_SIZE = 100
 const port = 3000
 const app = express()
 
-const resultsPublisher = {
-    subscribers: [],
-
-    notify() { this.subscribers.forEach(onDataAvailable => onDataAvailable()); },
-    subscribe(subscriber) { this.subscribers.push(subscriber); },
-    remove(subscriber) { this.subscribers.splice( this.subscribers.indexOf(subscriber), 1 )}
-}
-
-//register API with gateway
-const redisClient = redis.createClient({host:"backend-redis", port:6379})
-redisClient
-    .on('error', (err) => console.log(err.message))
-    .on('ready', () =>
-        setInterval(() =>
-            redisClient.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/tests/e2e`), 2000)
-    );
-
-//return test logs as original array from Redis
-app.get("/tests/e2e", async (req, res) => {
-    //res.contentType("application/json").send(JSON.stringify(tests))
-    const client = redis.createClient({host:"backend-redis", port:6379});
-    client.on("connect", () => {
-        client.lrange("tests-e2e", 0, -1, (err, arr) => {
-            res.contentType("application/json").send(JSON.stringify(arr))
-        });
-    }).on('error', (err) => res.send(err.message))
+//return all stored logs as array from Redis
+app.get("/tests/e2e/logs", async (req, res) => {
+    const redis = await createRedisClient();
+    const arr = await redis.lrange("tests-e2e", 0, -1);
+    const htmlArr = arr.map(l => stripAnsiCodes(l))
+    res.contentType("application/json").send(JSON.stringify(arr))
+    redis.client.quit();
 });
 
 //return test results file list
@@ -49,79 +31,54 @@ app.get("/tests/e2e/files/*", async (req, res) => {
 
 //return logs as text
 app.get("/tests/e2e/html", async (req, res) => {
-    const client = redis.createClient({host:"backend-redis", port:6379});
-    client.on("connect", () => {
-        client.lrange("tests-e2e", 0, -1, (err, arr) => {
-            const htmlArr = arr.map(l => l.replace(ansiStrip(),''))
-            res.contentType("text/html").send(htmlArr.join(""))
-        });
-    }).on('error', (err) => res.send(err.message))
+    const redis = await createRedisClient();
+    const arr = await redis.lrange("tests-e2e", 0, -1);
+    const htmlArr = arr.map(l => stripAnsiCodes(l))
+    res.contentType("text/html").send(htmlArr.join(""))
+    redis.client.quit();
 });
 
-function initializeSSE(req, res) {
-    // SSE Setup
-    res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-    });
-    res.write('\n');
-
-    let lastId = req.headers["last-event-id"];
-    let messageId = lastId || 0;
-    console.log('LastID:' + lastId);
-    replaySSE(messageId, res);
-
-    const onData = () => {
-        redisClient.lrange("tests-e2e", messageId, -1, (err, arr) => {
-            if (arr && arr.length > 0) {
-                messageId += arr.length;
-                console.log("Counter:"+messageId);
-                const htmlArr = arr.map(l => l.replace(ansiStrip(),''))
-                const log = htmlArr.join("");
-                console.log("Sending:"+log);
-                res.write(`id: ${messageId}\n`);
-                res.write(`data: ${JSON.stringify(log)}\n\n`);
-            }
-        });
-
-    }
-    resultsPublisher.subscribe(onData);
-
-    const intervalId = setInterval(() => {
-        res.write(`id: ${messageId}\n`);
-        res.write(`data: PING\n\n`);
-    }, 2000);
-
-    req.on('close', () => {
-        console.log("closed "+intervalId);
-        clearInterval(intervalId);
-        resultsPublisher.remove(onData);
-    });
-}
-
-function replaySSE(lastId, res) {
-    console.log("replay from "+lastId)
-    redisClient.get("tests-e2e-counter", (err, val) => {
-        console.log("Counter:"+val); //counter is at last
-        if (!val) val = 0;
-        const from = lastId - val;
-        redisClient.lrange("tests-e2e", from, -1, (err, arr) => {
-            lastId += arr.length;
-            const htmlArr = arr.map(l => l.replace(ansiStrip(),''))
-            const log = htmlArr.join("");
-            res.write(`id: ${lastId}\n`);
-            res.write(`data: ${JSON.stringify(log)}\n\n`);
-        });
-    })
+//read unprocessed events from Redis that happened after lastId
+async function fetchEventsSince(lastId) {
+    const redis = await createRedisClient();
+    let counter = Number.parseInt(await redis.get("tests-e2e-counter") || 0);
+    //if the last message was before counter, then we missed some logs, return all we have, otherwise return diff
+    const from = lastId < counter ? 0 : lastId - counter;
+    //console.log("Replay counter:" + counter + " lastId:" + lastId + " from:" + from);
+    const arr = await redis.lrange("tests-e2e", from, -1);
+    redis.client.quit();
+    return arr.map( (l,idx) => ({ id: counter+idx, message:stripAnsiCodes(l) }) )
 }
 
 //subscribe to log events SSE stream
 app.get('/tests/e2e/html/stream', (req, res) => {
-    initializeSSE(req, res);
+    const stream = initSSE(req, res, fetchEventsSince)
+    const subscription = resultsPublisher.subscribe({
+        onData: (item) => stream.send({id:item.id, message: stripAnsiCodes(item.message)} ),
+        onClose: () => stream.close()
+    })
+    stream.onClose = () => resultsPublisher.remove(subscription)
 });
 
 //start listening for http requests
 app.listen(port, '0.0.0.0', () => console.log(`E2E Tests at ${process.env.MY_POD_IP} listening on port ${port}!`))
 
+//register this API with gateway at /tests/e2e perfix
+const publisher = redis.createClient({host:"backend-redis", port:6379})
+publisher
+    .on('error', (err) => console.log(err.message))
+    .on('ready', () =>
+        setInterval(() =>
+            publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/tests/e2e`), 2000)
+    );
+
+//export communication sync to use with Cypress
+const resultsPublisher = {
+    subscribers: [],
+
+    notify(item) { this.subscribers.forEach(s => s.onData(item)); },
+    subscribe(subscriber) { this.subscribers.push(subscriber); return subscriber; },
+    remove(subscriber) { this.subscribers.splice( this.subscribers.indexOf(subscriber), 1 ) },
+    close() { this.subscribers.forEach(s => s.onClose())}
+}
 module.exports = resultsPublisher;

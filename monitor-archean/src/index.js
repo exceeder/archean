@@ -3,7 +3,6 @@ const redis = require('redis');
 const path = require('path');
 const Client = require('kubernetes-client').Client
 const Request = require('kubernetes-client/backends/request')
-
 const port = 3000
 const app = express()
 
@@ -64,7 +63,7 @@ function sseData(req, res) {
         }
         res.write(`id: ${messageId}\n`);
         res.write(`data: PING\n\n`);
-    }, 2000);
+    }, 5000);
 
     req.on('close', () => {
         clearInterval(intervalId);
@@ -79,14 +78,15 @@ async function subscribeToKubeEvents() {
     try {
         const client = await getKubeClent()
         const events = await client.apis.apps.v1.watch.namespaces('default').deployments.getObjectStream()
+        //todo also subscribe to pods, properly map and merge stream into business model
         //const jsonStream = new JSONStream()
         //stream.pipe(jsonStream)
-        events.on('data', object => {
-            //const status =  object.object.status.conditions ? object.object.status.conditions.map(c =>  JSON.stringify(c)).join(";") :
-                JSON.stringify(object.object.status);
-            //console.log(object.type,"name:",object.object.metadata.name,"ts:",object.object.metadata.creationTimestamp,"info:",status);
-            kubeEvents.push(JSON.stringify({action:object.type, name:object.object.metadata.name}))
-            //console.log('Event: ', JSON.stringify(object, null, 2))
+        events.on('data', obj => {
+            // const status =  obj.object.status.conditions ? obj.object.status.conditions.map(c =>  JSON.stringify(c)).join(";") :
+            //     JSON.stringify(obj.object.status);
+            // console.log(obj.type,"name:",obj.object.metadata.name,"ts:",obj.object.metadata.creationTimestamp,"info:",status);
+            kubeEvents.push(JSON.stringify({action:obj.type, name:obj.object.metadata.name}))
+            // console.log('Event: ', JSON.stringify(obj, null, 2))
         })
         events.on('error', err => {
             console.log("Stream error",err);

@@ -1,3 +1,5 @@
+const tabId = Math.random().toString(36).slice(2);
+
 export default {
     template: `
 <section>
@@ -45,14 +47,14 @@ export default {
     },
     created() {
         //fetch('/tests/e2e/html').then(res => res.text()).then(res => this.logs = res)
+        this.tabId = tabId
         this.connectSse();
         this.lastPing = Date.now()
         setInterval(() => {
-            if (new Date().getTime() - this.lastPing > 2500) {
-                if (this.sseSource) this.sseSource.close();
+            if (new Date().getTime() - this.lastPing > 5100) {
                 this.connectSse();
             }
-        },1000);
+        },5000);
     },
     updated() {
         const elem = this.$refs.log
@@ -78,16 +80,23 @@ export default {
             }
         },
         connectSse() {
-            console.log("Reset SSO!")
-            this.sseSource = new EventSource('/tests/e2e/html/stream')
+            console.log("Reset SSE!")
+            if (this.sseSource) {
+                this.sseSource.close();
+            }
+            this.sseSource = new EventSource('/tests/e2e/html/stream?tabId='+this.tabId)
             this.lastPing = new Date().getTime()
+            this.sseSource.addEventListener('PING', (e) => this.lastPing = Date.now());
             this.sseSource.addEventListener('message', (e) => {
-                if (e.data === 'PING') {
-                    this.lastPing = Date.now();
-                } else {
-                    console.log(e);
-                    this.logs += JSON.parse(e.data);
-                }
+                    //console.log(e.lastEventId, e.data);
+                    if (e.data !== "") {
+                        let data = JSON.parse(e.data);
+                        if (data === "RESET") {
+                            this.logs = ""
+                        } else {
+                            this.logs += data;
+                        }
+                    }
             });
         }
     }

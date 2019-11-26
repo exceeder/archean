@@ -30,9 +30,13 @@ class Proxy {
      */
      async proxy(req, res, target) {
         const rewrittenUrl = target.translate(req.originalUrl);
-        console.log("-> " + rewrittenUrl);
         try {
-            const clientRes = await fetch(rewrittenUrl, { redirect: 'manual' });
+            const clientRes = await fetch(rewrittenUrl, {
+                method: req.method,
+                headers: { 'x-forwarded-for': req.socket.remoteAddress, ...req.headers},
+                redirect: 'manual',
+                body: req.body
+            });
             //transfer headers
             this.copyHeaders(clientRes, res);
             //transfer HTTP status
@@ -41,8 +45,7 @@ class Proxy {
             clientRes.body.pipe(res)
             return clientRes.status;
         } catch (error) {
-            console.log(error);
-            throw error;
+            res.status(500).send(error.message).end()
         }
     }
 

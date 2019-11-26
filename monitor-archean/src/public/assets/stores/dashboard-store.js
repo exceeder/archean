@@ -20,6 +20,10 @@ const store = new Vuex.Store({
         deployments(state, payload) {
             state.deployments = payload
         },
+        removeDeploymentByName(state, payload) {
+            let idx = state.deployments.map(d => d.metadata.name).indexOf(payload)
+            if (idx !== -1) state.deployments.splice(idx,1)
+        },
         stats(state, payload) {
             state.stats = payload
         },
@@ -39,6 +43,9 @@ const store = new Vuex.Store({
             fetchDeployments()
                 .then(res => context.commit('deployments', res.body.items))
                 .catch(e => console.log(e));
+        },
+        removeDeployment(context, name) {
+          context.commit('removeDeploymentByName', name)
         },
         updateStats(context) {
             fetchRedisStats()

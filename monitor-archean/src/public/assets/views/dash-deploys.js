@@ -17,18 +17,30 @@ export default {
 `,
     store,
     mounted() {
-        let to;
+        let to = null;
         this.refreshDeployments();
         this.sseSource = new EventSource('/archean/v1/events');
         this.sseSource.addEventListener('message', (msg) => {
-            if (msg.data === 'PING') return;
-            console.log(msg);
-            clearTimeout(to); //todo fix this plug!
-            to = setTimeout(() => {
+            if (msg.data === 'PING') {
                 store.dispatch('updateApps');
-                store.dispatch('updateDeployments');
-                store.dispatch('updatePods');
-            }, 500);
+                return;
+            }
+            console.log(msg);
+            const event = JSON.parse(msg.data);
+            switch (event.action) {
+                case 'DELETED':
+                    store.dispatch('removeDeployment', event.name);
+                    break
+                case 'ADDED':
+                case 'MODIFIED':
+                    clearTimeout(to); //todo fix this plug!
+                    to = setTimeout(() => {
+                        store.dispatch('updateApps');
+                        store.dispatch('updateDeployments');
+                        store.dispatch('updatePods');
+                    }, 1000);
+                    break;
+            }
         });
 
     },

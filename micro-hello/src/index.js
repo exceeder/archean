@@ -6,7 +6,7 @@ const app = express()
 
 //process get requests
 app.get("/hello", async (req, res) => {
-    console.log(new Date() + " incoming hello request!")
+    console.log(new Date() + ": an incoming /hello request!")
     res.contentType("application/json").send(JSON.stringify({hello: new Date()}))
 });
 

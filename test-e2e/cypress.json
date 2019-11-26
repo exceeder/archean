@@ -1,4 +1,4 @@
 {
-  "numTestsKeptInMemory": 3,
-  "watchForFileChanges": true
+  "numTestsKeptInMemory": 1,
+  "watchForFileChanges": false
 }
