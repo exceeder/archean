@@ -40,6 +40,7 @@ async function spawnCypress() {
 
 function stopCypress() {
     if (cypress !== null) {
+        cypress.stdout.on('data', () => {});
         cypress.kill()
         cypress = null
     }
@@ -48,19 +49,19 @@ function stopCypress() {
 function onSpecFilesChange() {
     stopCypress();
     spawnCypress()
-        .then(() => console.log("Cypress is running."))
-        .catch(e => console.log("Cypress startup failed:",e))
+        .then(() => console.log("Cypress started."))
+        .catch(e => console.log("Cypress startup failed: ",e))
 }
 
 // file watcher and test runner
 function watchSpecFilesForChanges() {
-    let delayedRestart;
+    let delayedRestart = setTimeout(onSpecFilesChange, 1000); //initial startup if no changes detected
     chokidar.watch('./cypress/integration', {
         awaitWriteFinish: true
     }).on('all', (event, path) => {
         console.log("Detected e2e spec change:", event, path);
         clearTimeout(delayedRestart);
-        delayedRestart = setTimeout(() => onSpecFilesChange(), 500);
+        delayedRestart = setTimeout(onSpecFilesChange, 500);
     });
 }
 
@@ -71,9 +72,16 @@ process.on('uncaughtException', function(err) {
 
 //graceful shutdown
 process.on('SIGTERM',  () => {
-    resultsPublisher.close();
-    stopCypress();
-    redis.client.quit();
+    console.log(`(vvv) ${new Date()} shutting down ${process.env.MY_POD_IP}`)
+    try {
+        resultsPublisher.close();
+        stopCypress();
+        redis.client.quit();
+    } catch (e) {
+        console.log("(vvv) Shutdown error:",e);
+    }
+    console.log(`(vvv) ${new Date()} shutdown complete on ${process.env.MY_POD_IP}, exiting.`)
+    process.exit();
 });
 
 createRedisClient().then(client => {

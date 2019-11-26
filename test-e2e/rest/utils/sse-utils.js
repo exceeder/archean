@@ -9,7 +9,7 @@ function initSSE(req, res, fetchEventsSince) {
     res.write('\n');
     let lastId = req.headers["last-event-id"];
     const tabId = req.query.tabId;
-    console.log(`subscribe tab:${tabId} for ${req.headers['x-forwarded-for'] || req.socket.remoteAddress}, lastId: ${lastId}`);
+    //console.debug(`subscribe tab:${tabId} for ${req.headers['x-forwarded-for'] || req.socket.remoteAddress}, lastId: ${lastId}`);
     lastId = lastId || 0
 
     fetchEventsSince(lastId).then(data => {

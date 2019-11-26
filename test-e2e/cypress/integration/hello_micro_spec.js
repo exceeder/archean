@@ -13,7 +13,7 @@ describe('Hello micro works', function () {
             .should('include', 'application/json')
     })
 
-    it('returns hello3', function () {
+    it('returns hello property', function () {
         cy.get('@hello')
             .its('body')
             .its('hello')
