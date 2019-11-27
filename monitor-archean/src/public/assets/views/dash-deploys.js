@@ -17,35 +17,7 @@ export default {
 `,
     store,
     mounted() {
-        let to = null;
-        this.refreshDeployments();
-        this.sseSource = new EventSource('/archean/v1/events');
-        this.sseSource.addEventListener('message', (msg) => {
-            if (msg.data === 'PING') {
-                store.dispatch('updateApps');
-                return;
-            }
-            console.log(msg);
-            const event = JSON.parse(msg.data);
-            switch (event.action) {
-                case 'DELETED':
-                    store.dispatch('removeDeployment', event.name);
-                    break
-                case 'ADDED':
-                case 'MODIFIED':
-                    clearTimeout(to); //todo fix this plug!
-                    to = setTimeout(() => {
-                        store.dispatch('updateApps');
-                        store.dispatch('updateDeployments');
-                        store.dispatch('updatePods');
-                    }, 1000);
-                    break;
-            }
-        });
-
-    },
-    destroyed() {
-      this.sseSource.close();
+        //this.refreshDeployments();
     },
     computed: {
         deployments: () => store.state.deployments

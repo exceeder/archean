@@ -21,7 +21,7 @@ export default {
 `,
     store,
     mounted() {
-        this.refreshPods();
+        //this.refreshPods();
     },
     computed: {
         pods: () => store.state.pods

@@ -20,7 +20,19 @@ const store = new Vuex.Store({
         deployments(state, payload) {
             state.deployments = payload
         },
-        removeDeploymentByName(state, payload) {
+        addPod(state, payload) {
+            let idx = state.pods.map(d => d.metadata.name).indexOf(payload.metadata.name)
+            if (idx !== -1) state.pods[idx] = payload; else state.pods.push(payload);
+        },
+        removePod(state, payload) {
+            let idx = state.pods.map(d => d.metadata.name).indexOf(payload)
+            if (idx !== -1) state.pods.splice(idx,1)
+        },
+        addDeployment(state, payload) {
+            let idx = state.deployments.map(d => d.metadata.name).indexOf(payload.metadata.name)
+            if (idx !== -1) state.deployments[idx] = payload; else state.deployments.push(payload);
+        },
+        removeDeployment(state, payload) {
             let idx = state.deployments.map(d => d.metadata.name).indexOf(payload)
             if (idx !== -1) state.deployments.splice(idx,1)
         },

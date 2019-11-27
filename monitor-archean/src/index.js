@@ -3,10 +3,12 @@ const redis = require('redis');
 const path = require('path');
 const Client = require('kubernetes-client').Client
 const Request = require('kubernetes-client/backends/request')
+const MonitorEvent = require('./models/monitor-event')
 const port = 3000
 const app = express()
 
 const kubeNamespace = 'default';
+let client = null;
 
 app.use('/archean', express.static(path.join(__dirname, 'public')))
 
@@ -28,70 +30,82 @@ app.get("/archean/v1/redis-stats", async (req, res) => {
         const stats = convertPlainTextPropertiesToObject(reply)
         res.send(JSON.stringify({stats:stats}))
     });
-
 })
-
-const getKubeClent = async () => {
-    const backend = new Request(Request.config.getInCluster())
-    const client = new Client({ backend })
-    await client.loadSpec()
-    return client
-}
 
 app.get("/archean/v1/pods", async (req, res) => {
     try {
-        const client = await getKubeClent()
-        const pods = await client.api.v1.namespaces(kubeNamespace)
-            .pods.get({ qs: { labelSelector: 'repo=archean-micros'}})
+        const pods = await client.api.v1.namespaces(kubeNamespace).pods.get({
+            qs: { labelSelector: 'repo=archean-micros'}
+        })
         res.contentType("application/json").send(JSON.stringify(pods))
     } catch (e) {
        sendError(res, e)
     }
 })
 
-let kubeEvents = [];
 
-function sseData(req, res) {
-    let messageId = 0;
-
-    const intervalId = setInterval(() => {
-        while (kubeEvents.length > 0) {
-            res.write(`id: ${messageId}\n`);
-            res.write(`data: ${kubeEvents[0]}\n\n`);
-            messageId += 1;
-            kubeEvents.splice(0,1);
-        }
-        res.write(`id: ${messageId}\n`);
-        res.write(`data: PING\n\n`);
-    }, 5000);
-
-    req.on('close', () => {
-        clearInterval(intervalId);
-    });
-
-    req.on('timeout', () => { res.close(); } );
+function forwardDeployEvent(obj, res) {
+    try {
+        if (obj.object.metadata.namespace !== 'default') return;
+        console.debug("DEPLOYMENT", obj.type, obj.object.metadata.name, obj.object.metadata.creationTimestamp)
+        let event = new MonitorEvent(obj.type, '',
+            obj.object.metadata.name,
+            obj.object.metadata.creationTimestamp, {
+                metadata: obj.object.metadata,
+                spec: obj.object.spec,
+                status: obj.object.status
+            })
+        res.write(`event: DEPLOYMENTS\n`)
+        res.write(`data: ${event.asJson()}\n\n`)
+    } catch (e) {
+        console.log(e);
+    }
 }
 
-let subscription = false;
-async function subscribeToKubeEvents() {
-    if (subscription) return;
+function forwardPodEvent(obj, res) {
+    if (obj.object.metadata.namespace !== 'default') return;
+    console.debug("POD", obj.type,
+        "name:", obj.object.metadata.name,
+        "app:", obj.object.metadata.labels.app,
+        //"container:", obj.object.spec.containers[0].name,
+        //"image:", obj.object.spec.containers[0].image,
+        "status:", obj.object.status.phase,
+        "ts:", obj.object.metadata.creationTimestamp);
+    //console.debug(JSON.stringify(obj.object.status.containerStatuses,null,2))
+
+    let event = new MonitorEvent(obj.type, obj.object.metadata.labels.app,
+        obj.object.metadata.name,
+        obj.object.metadata.creationTimestamp, {
+            metadata: obj.object.metadata,
+            status: obj.object.status
+        })
+    res.write(`event: PODS\n`)
+    res.write(`data: ${event.asJson()}\n\n`)
+}
+
+async function subscribeToKubeEvents(req, res) {
+    let intervalId = setInterval(() => {
+        res.write(`event: PING\n`);
+        res.write(`data: \n\n`);
+    }, 5000);
+    let deployEvents = null;
+    let podEvents = null;
+    const close = () => {
+        clearInterval(intervalId)
+        deployEvents && deployEvents.abort()
+        podEvents && podEvents.abort()
+    };
+    req.on('close', close);
+    req.on('timeout', () => { close(); res.close(); } );
+
     try {
-        const client = await getKubeClent()
-        const events = await client.apis.apps.v1.watch.namespaces('default').deployments.getObjectStream()
-        //todo also subscribe to pods, properly map and merge stream into business model
-        //const jsonStream = new JSONStream()
-        //stream.pipe(jsonStream)
-        events.on('data', obj => {
-            // const status =  obj.object.status.conditions ? obj.object.status.conditions.map(c =>  JSON.stringify(c)).join(";") :
-            //     JSON.stringify(obj.object.status);
-            // console.log(obj.type,"name:",obj.object.metadata.name,"ts:",obj.object.metadata.creationTimestamp,"info:",status);
-            kubeEvents.push(JSON.stringify({action:obj.type, name:obj.object.metadata.name}))
-            // console.log('Event: ', JSON.stringify(obj, null, 2))
-        })
-        events.on('error', err => {
-            console.log("Stream error",err);
-        })
-        subscription = true;
+        deployEvents = await client.apis.apps.v1.watch.deployments.getObjectStream()
+        deployEvents.on('data', obj => forwardDeployEvent(obj, res))
+        deployEvents.on('error', err => console.log("Deploy stream error",err))
+
+        podEvents = await client.api.v1.watch.pods.getObjectStream()
+        podEvents.on('data', obj => forwardPodEvent(obj, res))
+        podEvents.on('error', err => console.log("Pod stream error",err))
     } catch (e) {
         console.log("Error: ",e);
     }
@@ -106,14 +120,11 @@ app.get('/archean/v1/events', async (req, res) => {
         'Connection': 'keep-alive',
     });
     res.write('\n');
-
-    sseData(req, res);
-    await subscribeToKubeEvents();
+    await subscribeToKubeEvents(req, res)
 });
 
 app.get("/archean/v1/deployments", async (req, res) => {
     try {
-        const client = await getKubeClent()
         const deployments = await client.apis.apps.v1.namespaces(kubeNamespace)
             .deployments().get({ qs: { labelSelector: 'repo=archean-micros'}})
         res.contentType("application/json").send(JSON.stringify(deployments))
@@ -132,14 +143,25 @@ app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     }
 })
 
-//cluster announcer
-const publisher = redis.createClient({host:"backend-redis", port:6379})
-publisher
-    .on('error', (err) => console.log(err.message))
-    .on('ready', () =>
-        setInterval(() =>
-            publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/archean`), 2000)
-    );
+new Promise(async (resolve, reject) => {
+    try {
+        //connect to in-pod kubernetes client
+        const backend = new Request(Request.config.getInCluster())
+        const k8sClient = new Client({ backend })
+        await k8sClient.loadSpec()
+        resolve(k8sClient);
+    } catch (e) { reject(e); }
+}).then(k8sClient => {
+    client = k8sClient;
+    //http server
+    app.listen(port, '0.0.0.0', () => console.log(`Updater at IP ${process.env.MY_POD_IP} listening on port ${port}!`))
 
-//http server
-app.listen(port, '0.0.0.0', () => console.log(`Updater at IP ${process.env.MY_POD_IP} listening on port ${port}!`))
+    //cluster announcer
+    const publisher = redis.createClient({host: "backend-redis", port: 6379})
+    publisher
+        .on('error', (err) => console.log(err.message))
+        .on('ready', () =>
+            setInterval(() =>
+                publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/archean`), 2000)
+        );
+}).catch(e => console.log(e));

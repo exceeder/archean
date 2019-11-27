@@ -2,6 +2,8 @@ apiVersion: skaffold/v1
 kind: Config
 build:
   artifacts:
+    - image: micro-hello
+      context: ./micro-hello/
     - image: api-gateway
       context: ./api-gateway/
     - image: archean-monitor
@@ -16,8 +18,6 @@ build:
         manual:
           - src: 'cypress/**/*.js'
             dest: .
-    - image: micro-hello
-      context: ./micro-hello/
 
 deploy:
   kustomize: {}

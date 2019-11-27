@@ -5,7 +5,7 @@ function createRedisClient() {
     return new Promise((resolve, reject) => {
         const redisClient = redis.createClient({host: "backend-redis", port: 6379})
         redisClient
-            .on('error', (err) => reject(err))
+            .on('error', (err) => console.log(err))
             .on('ready', () => {
                 //console.debug(`Connected to Redis ${redisClient.address}`)
                 resolve({

@@ -3,6 +3,7 @@ import pods from "./dash-pods.js"
 import deployments from "./dash-deploys.js"
 import tests from "./dash-tests.js"
 import dash3d from "./dash-3d.js"
+import initSSE from "../eventsource/sse.js"
 
 export default { template: `
      <div class="dashboard">        
@@ -28,5 +29,11 @@ export default { template: `
     },
     props: {
         activeTab: String
+    },
+    mounted() {
+        this.sse = initSSE('/archean/v1/events')
+    },
+    beforeDestroy() {
+        this.sse.close()
     }
 }
