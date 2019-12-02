@@ -161,3 +161,4 @@ hygen micro new <some-name>
 1. Improve k8s event handling, show stopping/starting containers, animate
 2. Improve deployments with liveness probes as per https://blog.risingstack.com/graceful-shutdown-node-js-kubernetes/
 3. Fix / cleanup 3d overview
+4. Make hello-micro default, hide archean behind the link on the welcome page, gamify
