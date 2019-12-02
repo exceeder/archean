@@ -8,7 +8,7 @@ export default {
    <app-card v-for="dep in deployments" :key="dep.metadata.name" :title="dep.metadata.name">             
        <ul class="left-align">                   
            <li>Replicas: {{dep.spec.replicas}}</li>                   
-           <li>Availablity: {{ dep.status.conditions.map(c => c.message).join('; ') }}</li>
+           <li>Availablity: {{ dep.status.conditions.map(c => c.type + ':' + c.message).join('; ') }}</li>
        </ul>               
    </app-card>
 </div>
@@ -16,11 +16,11 @@ export default {
 </section>
 `,
     store,
-    mounted() {
-        //this.refreshDeployments();
+    props: {
+        filtered: Boolean
     },
     computed: {
-        deployments: () => store.state.deployments
+        deployments () { return store.state.deployments.filter(d => !this.filtered || d.metadata.name.includes('hello')) }
     },
     methods: {
         refreshDeployments: () => store.dispatch('updateDeployments')

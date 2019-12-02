@@ -18,11 +18,14 @@ export default {
 </section> 
 `,
     store,
+    props: {
+        filtered: Boolean,
+    },
     mounted() {
         this.refreshApps();
     },
     computed: {
-        apps: () => store.state.apps
+        apps () { return store.state.apps.filter(app => !this.filtered || app.prefix.includes('hello')); }
     },
     methods: {
         refreshApps: () => store.dispatch('updateApps')

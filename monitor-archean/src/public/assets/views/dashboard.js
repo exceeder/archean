@@ -1,3 +1,4 @@
+import store from "../stores/dashboard-store.js"
 import apps from "./dash-apps.js"
 import pods from "./dash-pods.js"
 import deployments from "./dash-deploys.js"
@@ -8,9 +9,17 @@ import initSSE from "../eventsource/sse.js"
 export default { template: `
      <div class="dashboard">        
         <div class="tab" v-show="'monitor' === activeTab">
-            <apps/>
-            <pods/>
-            <deployments/>     
+            <div class="switch right">
+                <label>
+                  Full view
+                  <input type="checkbox" v-model="filtered">
+                  <span class="lever"></span>
+                  Focused view
+                </label>
+            </div>
+            <apps :filtered="filtered"/>
+            <pods v-bind:filtered="filtered"/>
+            <deployments :filtered="filtered"/>     
         </div>
         <div class="tab" v-show="'overview' === activeTab">
            <dash3d v-if="'overview' === activeTab"/>
@@ -20,6 +29,7 @@ export default { template: `
         </div>                                         
      </div>
     `,
+    store,
     components: {
         apps: apps,
         pods: pods,
@@ -31,7 +41,14 @@ export default { template: `
         activeTab: String
     },
     mounted() {
+        store.commit('initialiseStore');
         this.sse = initSSE('/archean/v1/events')
+    },
+    computed: {
+        filtered: {
+                get () { return  store.state.filtering.focused },
+                set (value) { store.dispatch('setFiltering', value) }
+        }
     },
     beforeDestroy() {
         this.sse.close()

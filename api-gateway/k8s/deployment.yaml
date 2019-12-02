@@ -16,6 +16,8 @@ spec:
         app: api-gateway
         repo: archean-micros
     spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 1
       containers:
         - name: api-gateway
           image: "api-gateway:latest"

@@ -20,11 +20,11 @@ export default {
 </section>  
 `,
     store,
-    mounted() {
-        //this.refreshPods();
+    props: {
+      filtered: Boolean
     },
     computed: {
-        pods: () => store.state.pods
+        pods() { return store.state.pods.filter(pod => !this.filtered || pod.metadata.labels.app.includes('micro')); }
     },
     methods: {
         refreshPods: () => store.dispatch('updatePods')

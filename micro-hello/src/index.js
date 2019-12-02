@@ -19,6 +19,8 @@ publisher
             publisher.publish("heartbeat", `http://${process.env.MY_POD_IP}:${port}\n/hello`), 2000)
     );
 
-
 //start listening for http requests
-app.listen(port, '0.0.0.0', () => console.log(`Hello micro at ${process.env.MY_POD_IP} listening on port ${port}!`))
+const server = app.listen(port, '0.0.0.0', () => console.log(`Hello micro at ${process.env.MY_POD_IP} listening on port ${port}!`))
+
+//graceful shutdown
+process.on('SIGTERM',  () => server.close(() => process.exit()));

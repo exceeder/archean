@@ -22,7 +22,7 @@ class Proxy {
     }
 
     /**
-     * Proxy a request to a new, rewritten URL and respond with the result
+     * Proxy a request to a new, rewritten URL and respond with the result.
      * @param req {http.ClientRequest}  - HTTP request object
      * @param res {http.ServerResponse}  - HTTP response object
      * @param target {registry.Target} - forwarding target from registry
@@ -37,10 +37,15 @@ class Proxy {
                 redirect: 'manual',
                 body: req.body
             });
-            //transfer headers
+            //transfer headers from the target response to our response
             this.copyHeaders(clientRes, res);
             //transfer HTTP status
             res.status(clientRes.status);
+            //handle closing; for keep-alive/server-sent events, avoid connection leaks
+            req.on('close', () => {
+                clientRes.body.unpipe()
+                res.end()
+            })
             //pipe response body
             clientRes.body.pipe(res)
             return clientRes.status;

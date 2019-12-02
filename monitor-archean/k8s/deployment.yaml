@@ -16,6 +16,8 @@ spec:
         app: archean-monitor
         repo: archean-micros
     spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 1
       containers:
         - name: archean-monitor
           image: "archean-monitor:latest"

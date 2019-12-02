@@ -8,9 +8,19 @@ const store = new Vuex.Store({
         apps: [],
         pods: [],
         deployments: [],
-        stats: []
+        stats: [],
+        filtering: {
+            focused: true
+            //in the future, search terms etc. belong here
+        }
     },
     mutations: {
+        initialiseStore(state) {
+            if(localStorage.getItem('dashboard-filtering')) {
+                let filtering = JSON.parse(localStorage.getItem('dashboard-filtering'))
+                this.replaceState( Object.assign(state, {filtering:filtering}) )
+            }
+        },
         apps(state, payload) {
             state.apps = payload
         },
@@ -22,7 +32,7 @@ const store = new Vuex.Store({
         },
         addPod(state, payload) {
             let idx = state.pods.map(d => d.metadata.name).indexOf(payload.metadata.name)
-            if (idx !== -1) state.pods[idx] = payload; else state.pods.push(payload);
+            if (idx !== -1) state.pods[idx] = payload; else state.pods.push(payload)
         },
         removePod(state, payload) {
             let idx = state.pods.map(d => d.metadata.name).indexOf(payload)
@@ -30,7 +40,7 @@ const store = new Vuex.Store({
         },
         addDeployment(state, payload) {
             let idx = state.deployments.map(d => d.metadata.name).indexOf(payload.metadata.name)
-            if (idx !== -1) state.deployments[idx] = payload; else state.deployments.push(payload);
+            if (idx !== -1) state.deployments[idx] = payload; else state.deployments.push(payload)
         },
         removeDeployment(state, payload) {
             let idx = state.deployments.map(d => d.metadata.name).indexOf(payload)
@@ -39,6 +49,10 @@ const store = new Vuex.Store({
         stats(state, payload) {
             state.stats = payload
         },
+        filtering(state, payload) {
+            state.filtering = payload
+            localStorage.setItem('dashboard-filtering', JSON.stringify(payload))
+        }
     },
     actions: {
         updateApps(context) {
@@ -49,12 +63,12 @@ const store = new Vuex.Store({
         updatePods(context) {
             fetchPods()
                 .then(res => context.commit('pods', res.body.items))
-                .catch(e => console.log(e));
+                .catch(e => console.log(e))
         },
         updateDeployments(context) {
             fetchDeployments()
                 .then(res => context.commit('deployments', res.body.items))
-                .catch(e => console.log(e));
+                .catch(e => console.log(e))
         },
         removeDeployment(context, name) {
           context.commit('removeDeploymentByName', name)
@@ -62,7 +76,10 @@ const store = new Vuex.Store({
         updateStats(context) {
             fetchRedisStats()
                 .then(res => context.commit('stats', res))
-                .catch(e => console.log(e));
+                .catch(e => console.log(e))
+        },
+        setFiltering(context, isFocused) {
+            context.commit('filtering', { focused: isFocused })
         }
     }
 })

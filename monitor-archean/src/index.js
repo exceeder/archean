@@ -47,6 +47,7 @@ app.get("/archean/v1/pods", async (req, res) => {
 function forwardDeployEvent(obj, res) {
     try {
         if (obj.object.metadata.namespace !== 'default') return;
+        if (obj.object.metadata.labels.repo !== 'archean-micros') return;
         console.debug("DEPLOYMENT", obj.type, obj.object.metadata.name, obj.object.metadata.creationTimestamp)
         let event = new MonitorEvent(obj.type, '',
             obj.object.metadata.name,
@@ -64,6 +65,7 @@ function forwardDeployEvent(obj, res) {
 
 function forwardPodEvent(obj, res) {
     if (obj.object.metadata.namespace !== 'default') return;
+    if (obj.object.metadata.labels.repo !== 'archean-micros') return;
     console.debug("POD", obj.type,
         "name:", obj.object.metadata.name,
         "app:", obj.object.metadata.labels.app,
@@ -92,8 +94,8 @@ async function subscribeToKubeEvents(req, res) {
     let podEvents = null;
     const close = () => {
         clearInterval(intervalId)
-        deployEvents && deployEvents.abort()
-        podEvents && podEvents.abort()
+        deployEvents && deployEvents.destroy() // note: xxxEvents are of class stream.Transform
+        podEvents && podEvents.destroy()
     };
     req.on('close', close);
     req.on('timeout', () => { close(); res.close(); } );
@@ -135,7 +137,6 @@ app.get("/archean/v1/deployments", async (req, res) => {
 
 app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     try {
-        const client = await getKubeClent()
         let logs = await client.api.v1.namespaces(kubeNamespace).pods(req.params.name).log.get()
         res.contentType("text/simple").send(logs.body)
     } catch (e) {
