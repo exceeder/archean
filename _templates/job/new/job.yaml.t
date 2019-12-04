@@ -19,6 +19,7 @@ spec:
     spec:
       template:
         spec:
+          restartPolicy: OnFailure
           containers:
             - name: <%= name %>
               image: "<%= name %>"
@@ -32,7 +33,6 @@ spec:
                 requests:
                   memory: "40Mi"
                   cpu: "10m"
-          restartPolicy: OnFailure
 
 
 

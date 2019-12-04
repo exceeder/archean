@@ -3,8 +3,8 @@ to: <%= name %>/src/index.js
 unless_exists: true
 ---
 console.log("job is starting")
-let interval = interval = setInterval(() => {
-        console.log(`job completed at ${process.env.MY_POD_IP} : ${new Date()}`);
+let interval = setInterval(() => {
+    console.log(`job completed at ${process.env.MY_POD_IP} : ${new Date()}`);
 }, 10000)
 
 setTimeout(() => {

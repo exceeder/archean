@@ -1,3 +1,4 @@
+# consult https://skaffold.dev/docs/references/yaml/
 apiVersion: skaffold/v1
 kind: Config
 build:

@@ -48,9 +48,11 @@ class Registry {
     }
 
     evictStaleTargets() {
-        const currentTime = new Date().getTime()
-        const staleTargets = this.targets.filter( t => currentTime - t.lastPing > 5000);
-        staleTargets.forEach(t => this.targets.splice(this.targets.findIndex(e => e === t),1));
+        //find stale pods
+        this.targets.forEach( t => t.evictStalePods())
+        const staleTargets = this.targets.filter(t => Object.keys(t.pods).length === 0)
+        //remove stale pods
+        staleTargets.forEach(t => this.targets.splice(this.targets.findIndex(el => el === t),1));
     }
 
     close() {

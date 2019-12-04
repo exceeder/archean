@@ -9,7 +9,7 @@ export default {
        <ul class="left-align">                   
            <li>Link: <a :href="app.prefix">{{app.prefix}}</a></li>                   
            <li>Base url: {{app.baseUrl}}</li>                   
-           <li>Last ping: {{ (new Date().getTime() - app.lastPing) / 1000 }}s ago</li>
+           <li>Last pings: {{ lastPings(app) }}</li>
            <li>Count: {{app.requestCount}}</li>
        </ul>               
    </app-card>
@@ -28,6 +28,7 @@ export default {
         apps () { return store.state.apps.filter(app => !this.filtered || app.prefix.includes('hello')); }
     },
     methods: {
-        refreshApps: () => store.dispatch('updateApps')
+        refreshApps: () => store.dispatch('updateApps'),
+        lastPings: app => Object.values(app.pods).map(p => `${(Date.now() - p.lastPing) / 1000}s ago`).join(",")
     }
 }
