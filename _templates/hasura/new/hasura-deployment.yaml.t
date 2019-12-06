@@ -1,3 +1,7 @@
+---
+to: backend-hasura/k8s/deployment.js
+unless_exists: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

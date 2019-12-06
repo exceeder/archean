@@ -1,3 +1,7 @@
+---
+to: backend-postgres/k8s/service.js
+unless_exists: true
+---
 apiVersion: v1
 kind: Service
 metadata:
