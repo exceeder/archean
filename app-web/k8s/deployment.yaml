@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-web
+  labels:
+    app: app-web
+    repo: archean-micros
+    app-type: micro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-web
+  template:
+    metadata:
+      labels:
+        app: app-web
+        repo: archean-micros
+    spec:
+      containers:
+        - name: app-web
+          image: "app-web:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
