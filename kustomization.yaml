@@ -7,4 +7,4 @@ resources:
   - api-gateway/k8s/service.yaml
   - monitor-archean/k8s/deployment.yaml
   - test-e2e/k8s/deployment.yaml
-  - micro-hello/k8s/deployment.yaml
+  - app-hello/k8s/deployment.yaml

@@ -49,11 +49,11 @@ If you already have Skaffold installed, please, ensure the version is 1.0.0+.
 ## Architecture
 
 ```
-                          +--http--> [hello]     ->---heartbeat---+
-                          |                                       |
-(internet)  -->  [api-gateway]                   <------------- [redis]
-                          |                                       |
-                          +--http--> [a-micro]   ->---heartbeat---+  
+                          +--http--> [app-hello]   ->---heartbeat---+
+                          |                                         |
+(internet)  -->  [api-gateway]                <----------------- [redis]
+                          |                                         |
+                          +--http--> [app-web]     ->---heartbeat---+  
                           ...
 
 ```
@@ -69,7 +69,7 @@ components without loosing the functionality. This way you can achieve HA or hor
 
 `backend-redis` stock deployment of Redis server into your Kubernetes cluster
 
-`micro-hello` example of the hello-world microservice, minimal implementation
+`app-hello` example of the hello-world microservice, minimal implementation
 
 `monitor-archean` a monitoring application working as a microservice with UI
 
@@ -113,7 +113,7 @@ heartbeat message every 2 seconds. This message contains prefix, e.g. "/hello", 
 with `/hello` to one of the hosts that published this message.
 
 1. Open your browser to http://localhost:30000/hello (it should print current date time in json)
-2. In `/micro-hello` directory find index.js, while everything is running, change `app.get('/hello'...)` to a different 
+2. In `/app-hello` directory find index.js, while everything is running, change `app.get('/hello'...)` to a different 
 path
 3. Adjust this path in `pubblisher.publish()` couple of lines below - this is how routing is announced
 4. Inspect how routes change in the monitor UI as you change them in publish()
@@ -123,7 +123,7 @@ path
 
 You can simply do `hygen micro new foo` to let templates do it, or follow the steps below.
 
-1. Copy `/micro-hello` directory to a new directory of your choice, say `/micro-foo`. 
+1. Copy `/app-hello` directory to a new directory of your choice, say `/micro-foo`. 
 2. Rename appname in package.json and k8s/deployment.yaml (there are 5 spots)
 3. Add your `/foo` to `./kustomization.yaml|resources` as `- foo/k8s/deployment.yaml`
 4. Copy-paste one of the `build.artifacts` in `skaffold.yaml` and change it to `/foo`

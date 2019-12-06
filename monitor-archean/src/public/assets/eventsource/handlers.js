@@ -11,6 +11,7 @@ const pods = {
     eventType: 'PODS',
     handle: function (event) {
         const monitorEvent = JSON.parse(event.data)
+        store.commit('addEvent', monitorEvent)
         switch (monitorEvent.action) {
             case "MODIFIED":
             case "ADDED":
@@ -28,6 +29,7 @@ const deployments = {
     eventType: 'DEPLOYMENTS',
     handle: function (event) {
         const monitorEvent = JSON.parse(event.data)
+        store.commit('addEvent', monitorEvent)
         switch (monitorEvent.action) {
             case "MODIFIED":
             case "ADDED":

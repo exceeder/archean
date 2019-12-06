@@ -10,9 +10,12 @@ body > div#app {
     background: #f4f4f4;
 }
 
+.container {
+    max-width: calc(100vw - 2em);
+}
 @media only screen and (min-width: 993px)  {
     .container {
-        width: 80%;
+        width: calc(100vw - 2em);
     }
 }
 
@@ -30,11 +33,32 @@ main > .container { margin-top: 10px; }
     flex-wrap: wrap;
 }
 .card {
-    flex: 1 16em;
+    flex: 1 1 20em;
     box-sizing: border-box;
     margin: 1rem .25em;
     overflow: hidden;
     max-height: calc(100vh - 120px);
+}
+.card table td, .card table { border:#eee 1px solid; }
+.card table td, .card table th { padding:0.5em; width:auto; }
+.sub-card {
+    flex: 0 1 12em;
+    box-sizing: border-box;
+    margin: 1rem .25em;
+    padding: 0 1rem;
+    /*border-left:3px #eee solid;*/
+    color: rgba(0,0,0,0.6);
+    border-radius: 16px;
+    background-color: #f0f0f0;
+    min-width: 18em;
+}
+.sub-card:first-child {
+    /*border-left:none;*/
+}
+
+.right-vertical {
+    height: calc(100vh - 12em);
+    padding: 24px;
 }
 
 .dashboard > section {

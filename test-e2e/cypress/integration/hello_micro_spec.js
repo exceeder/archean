@@ -1,6 +1,6 @@
 //note that Cypress runs inside the cluster, so, we use internal service hostname and port as per service.yaml
 
-describe('Hello micro works', function () {
+describe('Hello app works', function () {
 
     beforeEach(() => {
         cy.request('http://api-gateway:3000/hello').as('hello')

@@ -3,7 +3,7 @@ const redis = require('redis');
 const path = require('path');
 const Client = require('kubernetes-client').Client
 const Request = require('kubernetes-client/backends/request')
-const MonitorEvent = require('./models/monitor-event')
+const KubeSubscription = require('./controllers/kube-subscription')
 const port = 3000
 const app = express()
 
@@ -43,88 +43,6 @@ app.get("/archean/v1/pods", async (req, res) => {
     }
 })
 
-
-function forwardDeployEvent(obj, res) {
-    try {
-        if (obj.object.metadata.namespace !== 'default') return;
-        if (obj.object.metadata.labels.repo !== 'archean-micros') return;
-        console.debug("DEPLOYMENT", obj.type, obj.object.metadata.name, obj.object.metadata.creationTimestamp)
-        let event = new MonitorEvent(obj.type, '',
-            obj.object.metadata.name,
-            obj.object.metadata.creationTimestamp, {
-                metadata: obj.object.metadata,
-                spec: obj.object.spec,
-                status: obj.object.status
-            })
-        res.write(`event: DEPLOYMENTS\n`)
-        res.write(`data: ${event.asJson()}\n\n`)
-    } catch (e) {
-        console.log(e);
-    }
-}
-
-function forwardPodEvent(obj, res) {
-    if (obj.object.metadata.namespace !== 'default') return;
-    if (obj.object.metadata.labels.repo !== 'archean-micros') return;
-    console.debug("POD", obj.type,
-        "name:", obj.object.metadata.name,
-        "app:", obj.object.metadata.labels.app,
-        //"container:", obj.object.spec.containers[0].name,
-        //"image:", obj.object.spec.containers[0].image,
-        "status:", obj.object.status.phase,
-        "ts:", obj.object.metadata.creationTimestamp);
-    //console.debug(JSON.stringify(obj.object.status.containerStatuses,null,2))
-
-    let event = new MonitorEvent(obj.type, obj.object.metadata.labels.app,
-        obj.object.metadata.name,
-        obj.object.metadata.creationTimestamp, {
-            metadata: obj.object.metadata,
-            status: obj.object.status
-        })
-    res.write(`event: PODS\n`)
-    res.write(`data: ${event.asJson()}\n\n`)
-}
-
-async function subscribeToKubeEvents(req, res) {
-    let intervalId = setInterval(() => {
-        res.write(`event: PING\n`);
-        res.write(`data: \n\n`);
-    }, 5000);
-    let deployEvents = null;
-    let podEvents = null;
-    const close = () => {
-        clearInterval(intervalId)
-        deployEvents && deployEvents.destroy() // note: xxxEvents are of class stream.Transform
-        podEvents && podEvents.destroy()
-    };
-    req.on('close', close);
-    req.on('timeout', () => { close(); res.close(); } );
-
-    try {
-        deployEvents = await client.apis.apps.v1.watch.deployments.getObjectStream()
-        deployEvents.on('data', obj => forwardDeployEvent(obj, res))
-        deployEvents.on('error', err => console.log("Deploy stream error",err))
-
-        podEvents = await client.api.v1.watch.pods.getObjectStream()
-        podEvents.on('data', obj => forwardPodEvent(obj, res))
-        podEvents.on('error', err => console.log("Pod stream error",err))
-    } catch (e) {
-        console.log("Error: ",e);
-    }
-}
-
-
-app.get('/archean/v1/events', async (req, res) => {
-    // SSE Setup
-    res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-    });
-    res.write('\n');
-    await subscribeToKubeEvents(req, res)
-});
-
 app.get("/archean/v1/deployments", async (req, res) => {
     try {
         const deployments = await client.apis.apps.v1.namespaces(kubeNamespace)
@@ -144,6 +62,17 @@ app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     }
 })
 
+app.get('/archean/v1/events', async (req, res) => {
+    // SSE Setup
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+    res.write('\n');
+    new KubeSubscription(client).subscribe(req, res)
+})
+
 new Promise(async (resolve, reject) => {
     try {
         //connect to in-pod kubernetes client
@@ -151,7 +80,9 @@ new Promise(async (resolve, reject) => {
         const k8sClient = new Client({ backend })
         await k8sClient.loadSpec()
         resolve(k8sClient);
-    } catch (e) { reject(e); }
+    } catch (e) {
+        reject(e);
+    }
 }).then(k8sClient => {
     client = k8sClient;
     //http server

@@ -2,6 +2,8 @@ import './components/app-header.js';
 import './components/app-main.js';
 import './components/app-footer.js';
 import './components/app-card.js';
+import './components/lever.js';
+import './components/modal.js';
 import './components/expandable-image.js';
 import Dashboard from './views/dashboard.js'
 

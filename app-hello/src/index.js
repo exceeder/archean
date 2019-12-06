@@ -7,7 +7,7 @@ const app = express()
 //process get requests
 app.get("/hello", async (req, res) => {
     console.log(new Date() + ": an incoming /hello request!")
-    res.contentType("application/json").send(JSON.stringify({hello: new Date()}))
+    res.contentType("application/json").send(JSON.stringify({hello: new Date(), test:"abc"}))
 });
 
 //running heartbeat; message format is <your own url><CR><prefix>, e.g. "http://192.168.0.1:3000\n/some/path"

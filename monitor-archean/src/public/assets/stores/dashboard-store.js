@@ -9,6 +9,7 @@ const store = new Vuex.Store({
         pods: [],
         deployments: [],
         stats: [],
+        events: [],
         filtering: {
             focused: true
             //in the future, search terms etc. belong here
@@ -46,6 +47,9 @@ const store = new Vuex.Store({
             let idx = state.deployments.map(d => d.metadata.name).indexOf(payload)
             if (idx !== -1) state.deployments.splice(idx,1)
         },
+        addEvent(state, payload) {
+            state.events.push(payload)
+        },
         stats(state, payload) {
             state.stats = payload
         },
@@ -80,6 +84,36 @@ const store = new Vuex.Store({
         },
         setFiltering(context, isFocused) {
             context.commit('filtering', { focused: isFocused })
+        }
+    },
+    getters: {
+        focusedDeployments: state => {
+            return state.filtering.focused ?
+                state.deployments.filter(d => d.metadata.labels['app-type']) :
+                state.deployments
+        },
+        focusedPods: (state, getters) => {
+            const names = getters.focusedDeployments.map(d => d.metadata.name)
+            return state.filtering.focused ?
+                state.pods.filter(pod => names.indexOf(pod.metadata.labels.app) >= 0) :
+                state.pods
+        },
+        focusedApps: (state, getters) => {
+            const ipWhitelist = getters.focusedPods.map(pod => pod.status.podIP)
+            return state.filtering.focused ?
+                state.apps.filter(app => ipWhitelist.filter(ip => Object.keys(app.pods)[0].indexOf(ip) > 0).length > 0) :
+                state.apps
+        },
+        getPodsByDeploymentName: (state) => (name) => {
+            return state.pods.filter(pod => pod.metadata.labels.app === name)
+        },
+        recentEvents: (state, getters) => {
+            const ipWhitelist = getters.focusedPods.map(pod => pod.status.podIP)
+            if  (state.filtering.focused) {
+                return state.events.filter(e => ipWhitelist.indexOf(e.data.status.podIP)>=0 || e.data.metadata.labels['app-type']).slice(-16).reverse()
+            } else {
+                return state.events.slice(-16).reverse()
+            }
         }
     }
 })

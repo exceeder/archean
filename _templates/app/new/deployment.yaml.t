@@ -1,24 +1,29 @@
+---
+to: <%= name %>/k8s/deployment.yaml
+unless_exists: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: micro-hello
+  name: <%= name %>
   labels:
-    app: micro-hello
+    app: <%= name %>
     repo: archean-micros
+    app-type: micro
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: micro-hello
+      app: <%= name %>
   template:
     metadata:
       labels:
-        app: micro-hello
+        app: <%= name %>
         repo: archean-micros
     spec:
       containers:
-        - name: micro-hello
-          image: "micro-hello:latest"
+        - name: <%= name %>
+          image: "<%= name %>:latest"
           imagePullPolicy: IfNotPresent
           env:
           - name: MY_POD_IP
@@ -29,8 +34,3 @@ spec:
             requests:
               memory: "32Mi"
               cpu: "10m"
-          livenessProbe:
-            tcpSocket:
-              port: 3000
-            initialDelaySeconds: 1
-            periodSeconds: 3

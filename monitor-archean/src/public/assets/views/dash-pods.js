@@ -24,7 +24,8 @@ export default {
       filtered: Boolean
     },
     computed: {
-        pods() { return store.state.pods.filter(pod => !this.filtered || pod.metadata.labels.app.includes('micro')); }
+        pods() { return [] //return store.getters.focusedPods
+        }
     },
     methods: {
         refreshPods: () => store.dispatch('updatePods')

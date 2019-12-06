@@ -7,7 +7,7 @@ class Model {
         //nodes matrix to build out node cubes. For now 3 layers: front, middle tier, back
         this._nodes = [
             ['api-gateway'],
-            ['micro-hello1','micro-hello2','micro-hello3'],
+            ['app-hello1','app-hello2','app-hello3'],
             ['backend-redis']];
         //parallax page state
         this._pageState = "";
