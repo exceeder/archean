@@ -1,5 +1,5 @@
 ---
-to: backend-postgres/k8s/deployment.js
+to: backend-postgres/k8s/deployment.yaml
 unless_exists: true
 ---
 apiVersion: apps/v1

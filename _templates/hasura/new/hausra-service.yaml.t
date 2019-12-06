@@ -1,5 +1,5 @@
 ---
-to: backend-hasura/k8s/service.js
+to: backend-hasura/k8s/service.yaml
 unless_exists: true
 ---
 apiVersion: v1
