@@ -3,6 +3,8 @@ apiVersion: skaffold/v1
 kind: Config
 build:
   artifacts:
+    - image: app-web
+      context: ./app-web/
     - image: app-hello
       context: ./app-hello/
     - image: api-gateway

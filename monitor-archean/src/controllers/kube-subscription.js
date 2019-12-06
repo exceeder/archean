@@ -41,10 +41,10 @@ class KubeSubscription {
         try {
             if (obj.object.metadata.namespace !== kubeNamespace) return;
             if (!obj.object.metadata.labels || obj.object.metadata.labels.repo !== 'archean-micros') return;
-
-            console.debug("DEPLOYMENT", obj.type,
-                obj.object.metadata.name,
-                obj.object.metadata.creationTimestamp)
+            //
+            // console.debug("DEPLOYMENT", obj.type,
+            //     obj.object.metadata.name,
+            //     obj.object.metadata.creationTimestamp)
 
             let event = new MonitorEvent(obj.type, '',
                 obj.object.metadata.name,
@@ -68,11 +68,11 @@ class KubeSubscription {
             if (obj.object.metadata.namespace !== kubeNamespace) return;
             if (!obj.object.metadata.labels || obj.object.metadata.labels.repo !== 'archean-micros') return;
  
-            console.debug("POD", obj.type,
-                "name:", obj.object.metadata.name,
-                "app:", obj.object.metadata.labels.app,
-                "status:", obj.object.status,
-                "ts:", obj.object.metadata.creationTimestamp);
+            // console.debug("POD", obj.type,
+            //     "name:", obj.object.metadata.name,
+            //     "app:", obj.object.metadata.labels.app,
+            //     "status:", obj.object.status,
+            //     "ts:", obj.object.metadata.creationTimestamp);
 
             let event = new MonitorEvent(obj.type, obj.object.metadata.labels.app,
                 obj.object.metadata.name,

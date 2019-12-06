@@ -43,8 +43,9 @@ class Registry {
         const target = new Target(baseUrl, prefix);
         this.targets.push(target)
         //sort with longest prefix first
-        this.targets.sort((a,b) => a.prefix.length - b.prefix.length)
+        this.targets.sort((a,b) => b.prefix.length - a.prefix.length)
         console.log("New app registered: ", target)
+        console.log(this.targets.map(t => t.prefix))
     }
 
     evictStaleTargets() {

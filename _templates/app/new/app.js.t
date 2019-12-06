@@ -1,5 +1,5 @@
 ---
-to: <%= name %>/src/index.js
+to: <%= name %>/src/app.js
 unless_exists: true
 ---
 const express = require('express');
