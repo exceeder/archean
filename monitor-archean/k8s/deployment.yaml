@@ -31,3 +31,8 @@ spec:
             requests:
               memory: "32Mi"
               cpu: "10m"
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5

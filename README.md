@@ -32,19 +32,27 @@ at the root of this project and start fiddling with the code, while things deplo
 change and save the source files.
 
 Once skaffold pulls the images and starts them, open your browser to http://localhost:30000.
-By default you will land at a simple monitoring page that looks like this (see code in [monitor-archean](/monitor-archean/src/public)):
-![screenshot](screenshot.png)
- 
-In case port 30000 is already used, you can change it in `api-gateway/k8s/service.yaml` (nodePort).
+By default you will land in a home screen of a simple VueJS web app built with ES6 modules that loads data from a hello
+microservice.
 
-If you do not have it all installed and are on MacOS:
+There is also a link to a monitoring tool showing what's going on in your cluster 
+(see code in [monitor-archean](/monitor-archean/src/public)):
+
+![screenshot](screenshot.png)
+
+##### Troubleshooting: 
+* If you do not have Kubernetes/Docker installed, you could do this on MacOS:
 ```
 brew cask install docker
 brew install skaffold
 ```
-then you will find Docker in Applications, you need to start it and login. 
+then you will find Docker in Applications, you will need to start it and login and enable Kubernetes. 
 
-If you already have Skaffold installed, please, ensure the version is 1.0.0+.
+* If you already have Skaffold installed, please, ensure the version is 1.0.0+.
+
+
+* In case port 30000 is already used, you can change it in `api-gateway/k8s/service.yaml` (nodePort).
+
 
 ## Architecture
 
@@ -69,7 +77,9 @@ components without loosing the functionality. This way you can achieve HA or hor
 
 `backend-redis` stock deployment of Redis server into your Kubernetes cluster
 
-`app-hello` example of the hello-world microservice, minimal implementation
+`app-hello` example of a tiny hello-world microservice, minimal Express Node implementation 
+
+`app-web` example of a minimal UI microservice bound to '/'
 
 `monitor-archean` a monitoring application working as a microservice with UI
 
@@ -106,6 +116,11 @@ pipeline below.
 It is best you open the whole project from the root in your favourite source editor as you can modify and refactor at 
 once.
 
+### Understand scaling
+
+The app-hello is fully scalable. Open it's k8s/deployment.yaml and change a number of replicas. Refresh main screen. 
+Observe the balancing. 
+
 ### Understand routing
 
 API-Gateway listens on Redis channel "heartbeat". All components that wish to receive traffic publish a
@@ -121,9 +136,9 @@ path
 
 ### Create your own microservice
 
-You can simply do `hygen micro new foo` to let templates do it, or follow the steps below.
+You can simply do `hygen app new app-foo` to let templates do it, OR follow the manual steps below.
 
-1. Copy `/app-hello` directory to a new directory of your choice, say `/micro-foo`. 
+1. Copy `/app-hello` directory to a new directory of your choice, say `/app-foo`. 
 2. Rename appname in package.json and k8s/deployment.yaml (there are 5 spots)
 3. Add your `/foo` to `./kustomization.yaml|resources` as `- foo/k8s/deployment.yaml`
 4. Copy-paste one of the `build.artifacts` in `skaffold.yaml` and change it to `/foo`
@@ -159,6 +174,5 @@ hygen micro new <some-name>
 ### Roadmap / TODO
 
 1. Improve k8s event handling, show stopping/starting containers, animate
-2. Improve deployments with liveness probes as per https://blog.risingstack.com/graceful-shutdown-node-js-kubernetes/
 3. Fix / cleanup 3d overview
-4. Make hello-micro default, hide archean behind the link on the welcome page, gamify
+5. Gamify?
