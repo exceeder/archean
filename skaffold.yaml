@@ -25,4 +25,10 @@ build:
 deploy:
   kustomize: {}
 
+profiles:
+  - name: gcp
+    build:
+      googleCloudBuild:
+        projectId: 'use-your-project-name'
+
 #todo for test-e2e avoid rebuilds by syncing test scripts only
