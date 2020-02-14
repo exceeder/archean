@@ -1,6 +1,7 @@
-const express = require('express');
-const redis = require('redis');
-const path = require('path');
+import express from 'express'
+import redis from 'redis'
+import path from 'path'
+const __dirname = import.meta.url.slice(7, import.meta.url.lastIndexOf("/"))
 
 const port = 3000
 const app = express()
