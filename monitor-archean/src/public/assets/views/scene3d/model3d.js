@@ -8,7 +8,9 @@ class Model {
         this._nodes = [
             ['api-gateway'],
             ['app-hello1','app-hello2','app-hello3'],
-            ['backend-redis']];
+            ['backend-redis']
+        ];
+        this.health = 20;
         //parallax page state
         this._pageState = "";
         this._particles = true;

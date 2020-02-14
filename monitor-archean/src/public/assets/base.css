@@ -94,9 +94,39 @@ video {
     outline: none;
 }
 
+/* --- 3d --- */
 .canvas3d {
     width:100%; height: calc(100vh - 110px); overflow: hidden;
 }
+
+#number {
+    position: absolute;
+    z-index: -1;
+}
+
+.annotation {
+    position: fixed;
+    display: inline-block;
+    width: 15em;
+    line-height: 1.0;
+    font-size:0.9em;
+    border: #fff 1px solid;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding:1em;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 600ms, visibility 600ms, top 200ms, left 200ms;
+}
+
+.annotation.visible {
+    opacity: 0.95;
+    visibility: visible;
+}
+
+.annotation table { margin: 1em 0 0 0.5em; }
+.annotation table td, .annotation table th  { padding:0.1em; margin:0;}
+.annotation h5 {margin:0 0 1em 0; text-transform: uppercase; }
 
 /* --- expandable image --- */
 

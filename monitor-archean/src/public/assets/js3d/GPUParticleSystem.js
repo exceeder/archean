@@ -15,7 +15,9 @@
  *
  */
 
-THREE.GPUParticleSystem = function( options ) {
+const THREE = window.THREE || {}
+
+THREE.GPUParticleSystem = function(options ) {
 
 	THREE.Object3D.apply( this, arguments );
 
@@ -74,12 +76,12 @@ THREE.GPUParticleSystem = function( options ) {
 		v.y = ( velocity.y - 0.5 ) * 0.5;
 		v.z = ( velocity.z - 0.5 ) * 0.5;
 
-		newPosition = positionStart + ( v * 10.0 ) * timeElapsed;
+		newPosition = positionStart + ( v * 3.0 ) * timeElapsed;
 
 		vec3 noise = vec3(0.5); 
 		vec3 noiseVel = ( noise.rgb - 0.5 ) * 30.0;
 
-		newPosition = mix( newPosition, newPosition + vec3( noiseVel * ( turbulence * 5.0 ) ), ( timeElapsed / lifeTime ) );
+		newPosition = mix( newPosition, newPosition + vec3( noiseVel * ( turbulence * 9.0 ) ), ( timeElapsed / lifeTime ) );
 
 		if( v.y > 0. && v.y < .05 ) {
 			lifeLeft = 0.0;
@@ -94,7 +96,7 @@ THREE.GPUParticleSystem = function( options ) {
 		} else {
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 			lifeLeft = 0.0;
-			gl_PointSize = 0.;
+			gl_PointSize = 0.1;
 		}
 	}`,
 	fragmentShader:`
@@ -112,7 +114,7 @@ THREE.GPUParticleSystem = function( options ) {
     void main() {
         float alpha = 0.3;
         if( lifeLeft > 0.9 ) {
-            alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.9 ), vec2( 0.0, 1.0 ) );
+            alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
         } else {
             alpha = lifeLeft * 0.55;
         }
@@ -204,7 +206,7 @@ THREE.GPUParticleSystem.prototype.constructor = THREE.GPUParticleSystem;
 
 // Subclass for particle containers, allows for very large arrays to be spread out
 
-THREE.GPUParticleContainer = function( maxParticles, particleSystem ) {
+THREE.GPUParticleContainer = function(maxParticles, particleSystem ) {
 
 	THREE.Object3D.apply( this, arguments );
 
@@ -287,9 +289,9 @@ THREE.GPUParticleContainer = function( maxParticles, particleSystem ) {
 
 		var maxVel = 2;
 
-		var velX = velocity.x + particleSystem.random() * velocityRandomness;
-		var velY = velocity.y + particleSystem.random() * velocityRandomness;
-		var velZ = velocity.z + particleSystem.random() * velocityRandomness;
+		var velX = velocity.x + particleSystem.random() * velocityRandomness * 0.01;
+		var velY = velocity.y + particleSystem.random() * velocityRandomness * 0.1;
+		var velZ = velocity.z + particleSystem.random() * velocityRandomness * 0.5;
 
 		velX = THREE.Math.clamp( ( velX - ( - maxVel ) ) / ( maxVel - ( - maxVel ) ), 0, 1 );
 		velY = THREE.Math.clamp( ( velY - ( - maxVel ) ) / ( maxVel - ( - maxVel ) ), 0, 1 );

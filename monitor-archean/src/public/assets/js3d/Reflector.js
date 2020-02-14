@@ -2,7 +2,8 @@
  * @author Slayvin / http://slayvin.net
  */
 
-THREE.Reflector = function ( geometry, options ) {
+const THREE = window.THREE || {}
+THREE.Reflector = function (geometry, options ) {
 
 	THREE.Mesh.call( this, geometry );
 

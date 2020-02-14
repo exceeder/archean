@@ -1,3 +1,5 @@
+import store from "../stores/dashboard-store.js"
+
 const tabId = Math.random().toString(36).slice(2);
 
 export default {
@@ -75,11 +77,13 @@ export default {
                     .then(res => res.json())
                     .then(res => this.files = res)
                     .then(() => this.tab = tab)
+                    .catch(e => console.log(e));
             } else {
                 this.tab = tab
             }
         },
         connectSse() {
+            if (!store.state.apps.find(a => a.prefix.startsWith("/tests"))) return;
             console.log("Reset SSE!")
             if (this.sseSource) {
                 this.sseSource.close();
@@ -98,6 +102,10 @@ export default {
                         }
                     }
             });
+            this.sseSource.onerror = function(e, t) {
+                console.log("SSE error: ", e.type, this.url);
+                this.close();
+            };
         }
     }
 }

@@ -2,7 +2,9 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.EffectComposer = function ( renderer, renderTarget ) {
+const THREE = window.THREE || {}
+
+THREE.EffectComposer = function (renderer, renderTarget ) {
 
 	this.renderer = renderer;
 
@@ -57,9 +59,7 @@ THREE.EffectComposer = function ( renderer, renderTarget ) {
 	}
 
 	this.copyPass = new THREE.ShaderPass( THREE.CopyShader );
-
 	this.clock = new THREE.Clock();
-
 };
 
 Object.assign( THREE.EffectComposer.prototype, {

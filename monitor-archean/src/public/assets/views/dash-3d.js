@@ -1,40 +1,34 @@
 import store from "../stores/dashboard-store.js"
-// import Scene3d from "./scene3d/scene3d.js"
-function lazyLoadThreeJs(canvas3d, done) {
-    import("./scene3d/scene3d.js")
-        .then((module) => {
-            const Scene3d = module.default;
-            done(new Scene3d(canvas3d));
-        });
-}
+import annotation from "./cards/annotation.js"
+import {Row,Box,Layout} from "./scene3d/layout.js"
+import stage3d from "./scene3d/stage3d.js"
+
+//on this level, app business logic is provided
 
 export default {
     template: `
 <section>
-<div class="canvas3d" ref="canvas3d">
- 
-</div>
+    <stage3d>
+      <!-- things -->
+      <Layout>
+        <Row>
+          <Box v-for="pod in pods" :key="pod.status.podIP" :name="pod.metadata.labels.app"/> 
+        </Row>     
+      </Layout>
+      <!-- annotation popups -->   
+      <template #annotation>
+          <annotation/>
+      </template>
+    </stage3d>
 </section>
 `,
     store,
+    components: {stage3d, annotation, Row, Box, Layout},
     mounted() {
-        this.refreshApps();
-        lazyLoadThreeJs(this.$refs.canvas3d, (scene3d) => this.init(scene3d));
+        store.dispatch("updatePods");
     },
     computed: {
+        deployments: () => store.state.deployments,
         pods: () => store.state.pods
-    },
-    methods: {
-        init(scene3d) { this.scene3d = scene3d; },
-        refreshApps() { store.dispatch('updatePods') }
-    },
-    watch: {
-        pods(state) {
-            if (!this.scene3d) return;
-            this.scene3d.model.nodes[1] = state
-                .filter(pod => pod.metadata.labels.app.includes("micro"))
-                .map(pod => pod.metadata.name)
-        }
     }
-
 }

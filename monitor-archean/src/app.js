@@ -46,7 +46,9 @@ app.get("/archean/v1/pods", async (req, res) => {
 app.get("/archean/v1/deployments", async (req, res) => {
     try {
         const deployments = await client.apis.apps.v1.namespaces(kubeNamespace)
-            .deployments().get({ qs: { labelSelector: 'repo=archean-micros'}})
+            .deployments().get({
+                 qs: { labelSelector: 'repo=archean-micros'}
+            })
         res.contentType("application/json").send(JSON.stringify(deployments))
     } catch (e) {
         sendError(res, e)

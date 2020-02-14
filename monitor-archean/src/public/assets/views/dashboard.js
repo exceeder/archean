@@ -29,7 +29,7 @@ export default { template: `
                 <b>Events</b>
                 <div class="collection">
                   <div class="collection-item" v-for="ev in $store.getters.recentEvents" @click="showDetails(ev)">
-                    <i style="color:#ccc">{{ago(ev.ts)}} </i> <span> {{ev.action}} {{ev.type}} <i>{{ev.name}}</i> </span>
+                    <i style="color:#ccc">{{ago(ev.ts)}} </i> <span> {{ev.etype}}  {{ev.action}} {{ev.type}} <i>{{ev.name}}</i> </span>
                   </div>
                 </div>
               </div>

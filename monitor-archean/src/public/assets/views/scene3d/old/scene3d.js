@@ -1,16 +1,6 @@
-import "../../js3d/three.js"
-import "../../js3d/Reflector.js"
-import "../../js3d/RoundedBox.js"
-import "../../js3d/GPUParticleSystem.js"
-import "../../js3d/EffectComposer.js"
-import "../../js3d/ShaderPass.js"
-import "../../js3d/RenderPass.js"
-import "../../js3d/CopyShader.js"
-
+import THREE from "../../js3d/index.js"
 import model from "./model3d.js"
-
-const THREE = window.THREE; //Three.js; not ES6
-
+return;
 //todo needs large cleanup and refactoring
 
 //--- scene settings ---
@@ -20,17 +10,17 @@ const options = {
     position: new THREE.Vector3(),
     positionRandomness: 0.01,
     velocity: new THREE.Vector3(),
-    velocityRandomness: .3,
+    velocityRandomness: .2,
     color: 0x77ffff,
-    colorRandomness: .1,
-    turbulence: .0001,
-    lifetime: 0.7,
+    colorRandomness: .9,
+    turbulence: .001,
+    lifetime: 0.9,
     size: 0.01,
-    sizeRandomness: 0.5
+    sizeRandomness: 0.3
 };
 
 const spawnerOptions = {
-    spawnRate: 1000,
+    spawnRate: 500,
     horizontalSpeed: 2.2,
     verticalSpeed: 0.01,
     timeScale: 1.0
@@ -42,11 +32,13 @@ let camera, scene, renderer, cameraTarget;
 let particleSystem;
 let composer, renderPass;
 let group, labelObject, mouse = {x:0, y:0};
+let sprite, spriteBehindObject, mesh;
 let labelPos = {x:0, y:0}, oldPos = {x:1000, y:1000};
+let clicked = false;
 
 export default class Scene3d {
     constructor(domParent) {
-        cameraTarget = new THREE.Vector3();
+        cameraTarget = new THREE.Vector3(0.0, 0.0, 1.5);
         this.domParent = domParent;
         if (this.domParent === null) {
             throw new Error("Invalid parent selector: "+domParent);
@@ -73,7 +65,7 @@ export default class Scene3d {
         renderer.setPixelRatio(devicePixelRatio);
         this.domParent.appendChild(renderer.domElement);
 
-        camera = new THREE.PerspectiveCamera(45, width / height, 2, 22);
+        camera = new THREE.PerspectiveCamera(45, width / height, 2, 32);
         camera.position.x = 0;
         camera.position.y = 10;
         camera.position.z = 0;
@@ -88,16 +80,19 @@ export default class Scene3d {
         }
         scene.add( group );
 
+        //texture
+        this.createDynamicTexture(scene);
+
         //mirror
         this.createGroundMirror(scene);
 
         // cubes
         this.createCubes(scene);
-        this.createCenter(scene);
+        //this.createCenter(scene);
 
         //particles
         particleSystem = new THREE.GPUParticleSystem( {
-            maxParticles: 5000
+            maxParticles: 2500
         } );
         scene.add( particleSystem );
 
@@ -111,18 +106,25 @@ export default class Scene3d {
         renderPass = new THREE.RenderPass(scene, camera);
         composer.addPass(renderPass);
 
+        //this.createSprite();
+
         //resize and mouse to show details
         window.addEventListener( 'resize', () => this.onWindowResize(), false );
         this.domParent.addEventListener('mousemove', (e) => this.onCanvasMouseMove(e));
+        this.domParent.addEventListener('mousedown', (e) => this.onCanvasClick(e));
         //react on model changes
-        model.on('added', (data) => {
+        this.model.on('added', (data) => {
             //todo add cubes to scene, we might need to adjust the row
         });
-        model.on('removed',(data) => {
+        this.model.on('removed',(data) => {
             const obj = scene.getObjectByName("cube-"+data.node);
             obj && scene.remove(obj);
         });
-        model.on('parallax', () => this.onWindowResize());
+        this.model.on('parallax', () => this.onWindowResize());
+
+    }
+
+    createDynamicTexture(scene) {
 
     }
 
@@ -137,11 +139,32 @@ export default class Scene3d {
         } );
         groundMirror.rotateX( - Math.PI / 2 );
         groundMirror.position.y=-1.5;
-        groundMirror.receiveShadow = true;
+        groundMirror.receiveShadow = false; //true;
         scene.add(groundMirror);
 
         //overlay plane
-        let plane = new THREE.Mesh( new THREE.PlaneGeometry( 1000, 1000 ), new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 0.8, transparent: true } ) );
+        let dynamicTexture	= new THREE.DynamicTexture(4096, 4096)
+        dynamicTexture.context.font	= "bold 24px Helvetica";
+        //dynamicTexture.texture.wrapS = THREE.RepeatWrapping;
+        //dynamicTexture.texture.wrapT = THREE.RepeatWrapping;
+        dynamicTexture.texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        dynamicTexture.texture.repeat.set(21, 21);
+        dynamicTexture.texture.offset.set(-10.0, -10.0);
+        // update the text
+        dynamicTexture.clear('#ffffffc0')
+            .drawText('AppWeb', null, 2048+80, '#039be5')
+            .drawText('AppHello', null, 2048-175, '#039be5')
+            .drawText('Monitor', null, 2048+320, '#039be5')
+            .drawText('Gateway', 2048 - 300, 2048+80, '#039be5')
+            .drawText('Redis', 2048 + 200, 2048+80, '#039be5')
+            .drawText('Health: 97%', 2048 + 200, 2048+100, '#555555', '12px monospace')
+        let material	= new THREE.MeshBasicMaterial({
+            map	: dynamicTexture.texture,
+            opacity: 1.0,
+            transparent: true
+        })
+        // material = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 0.8, transparent: true } )
+        let plane = new THREE.Mesh( new THREE.PlaneGeometry( 1000, 1000 ), material );
         plane.rotation.x = - Math.PI / 2.0;
         plane.position.y = -1.49;
         scene.add(plane);
@@ -159,34 +182,40 @@ export default class Scene3d {
     }
 
     createCubes(scene) {
+        let NLayers = this.model.nodes.length;
+        for (let i=0; i < NLayers; i++) {
+            let layer = this.model.nodes[i];
+            let NBoxes = layer.length;
+            for (let j=0; j < NBoxes; j++) {
+                this.createBox(j, i, NBoxes, NLayers, layer[j], scene)
+            }
+        }
+    }
+
+    createBox(u, v, uSize, vSize,  name, scene) {
         const R = 1.3;
         const D = 1.5;
         let bMaterial = new THREE.MeshStandardMaterial();
         bMaterial.roughness = 0.2;
         bMaterial.metalness = 0.3;
-        bMaterial.color.setHSL( 0.0, 0.0, 0.3 );
-        let NLayers = model.nodes.length;
-        for (let i=0; i < NLayers; i++) {
-            let layer = model.nodes[i];
-            let NBoxes = layer.length;
-            for (let j=0; j < NBoxes; j++) {
-                let box = new THREE.Mesh(new RoundedBoxGeometry(R, R, R, .15, 3), bMaterial);
-                box.name = "cube-"+layer[j];
-                box.position.x = - NLayers * (R + D) / 2 + (R + D) * i + (R + D) / 2;
-                box.position.y = -.7;
-                box.position.z = - NBoxes * (R + D) / 2 + (R + D) * j + (R + D) / 2;
-                box.castShadow = true;
-                if (i===0 && j===0) {
-                    labelObject = box;
-                }
-                scene.add(box);
-                // let sprite = this.makeTextSprite(layer[j]);
-                // sprite.position.x = box.position.x;
-                // sprite.position.z = box.position.z;
-                // sprite.position.y = 0.3;
-                // scene.add(sprite);
-            }
+        bMaterial.color.setHSL(0.0, 0.0, 0.3);
+
+        let box = new THREE.Mesh(new RoundedBoxGeometry(R, R / 2, R, .15, 3), bMaterial);
+        box.name = "cube-" + name;
+        box.position.x = -vSize * (R + D) / 2 + (R + D) * v + (R + D) / 2;
+        box.position.y = -1.0;
+        box.position.z = -uSize * (R + D) / 2 + (R + D) * u + (R + D) / 2;
+        box.castShadow = true;
+        if (v === 0 && u === 0) {
+            labelObject = box;
         }
+        scene.add(box);
+        // let sprite = this.makeTextSprite(name);
+        // sprite.position.x = box.position.x;
+        // sprite.position.z = box.position.z;
+        // sprite.position.y = 0.3;
+        // scene.add(sprite);
+        return box;
     }
 
     makeTextSprite(message, opts = {}) {
@@ -260,12 +289,12 @@ export default class Scene3d {
     }
 
     createCenter(scene) {
-        let geometry = new THREE.SphereBufferGeometry( 0.1, 16, 16 );
+        let geometry = new THREE.SphereBufferGeometry( 0.25, 16, 16 );
         let material = new THREE.MeshStandardMaterial();
         material.roughness = 0.5 * Math.random() + 0.25;
         material.metalness = 0;
         material.color.setRGB( 0.3, 0.5, 0.7 );
-        let mesh = new THREE.Mesh( geometry, material );
+        mesh = new THREE.Mesh( geometry, material );
         mesh.position.x = mesh.position.z = 0.0;
         mesh.position.y = 0.0;
         scene.add( mesh );
@@ -293,6 +322,26 @@ export default class Scene3d {
         }
     }
 
+    createSprite() {
+        const numberTexture = new THREE.CanvasTexture(
+            document.querySelector("#number")
+        );
+
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: numberTexture,
+            alphaTest: 0.5,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false
+        });
+
+        sprite = new THREE.Sprite(spriteMaterial);
+        sprite.position.set(-2.25, 0, 0);
+        sprite.scale.set(.3, .3, .3);
+
+        scene.add(sprite);
+    }
+
     // --- utils -----
 
     toScreenPosition(obj, camera)
@@ -300,15 +349,16 @@ export default class Scene3d {
         let vector = new THREE.Vector3();
 
         // TODO: need to update this when resize window
-        let widthHalf = 0.5*renderer.domElement.offsetWidth;
-        let heightHalf = 0.5*renderer.domElement.offsetHeight;
+        const canvas = renderer.domElement;
+        let widthHalf = 0.5 * canvas.offsetWidth;
+        let heightHalf = 0.5* canvas.offsetHeight;
 
         obj.updateMatrixWorld();
         vector.setFromMatrixPosition(obj.matrixWorld);
         vector.project(camera);
 
-        vector.x = ( vector.x * widthHalf ) + widthHalf;
-        vector.y = - ( vector.y * heightHalf ) + heightHalf;
+        vector.x = ( vector.x * widthHalf ) + widthHalf + canvas.offsetLeft;
+        vector.y = - ( vector.y * heightHalf ) + heightHalf + canvas.offsetTop;
 
         return {
             x: vector.x,
@@ -338,22 +388,43 @@ export default class Scene3d {
         // (such as the mouse's TrackballControls)
         // event.preventDefault();
 
-        // update the mouse variable
-        mouse.x = (event.offsetX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
-        //console.log(event.offsetX +", "+event.offsetY);
+        mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
+        mouse.y = - (event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+    }
+
+    onCanvasClick(event) {
+        event.preventDefault();
+        if (clicked) {
+            document.querySelector('.annotation').style.display = 'none';
+            clicked = false;
+        } else {
+            if (this.selectedObject) clicked = true;
+        }
     }
 
     intersects() {
-        let vector = new THREE.Vector3(mouse.x, mouse.y, 1);
+        if (mouse.x === 0 && mouse.y === 0) return;
+        let vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
         vector.unproject(camera);
         let ray = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
 
         // create an array containing all objects in the scene with which the ray intersects
-        let intersects = ray.intersectObjects(scene.children);
-        if (intersects.length > 0) {
-            /*labelObject = intersects[0].object;
-            let l3d = $('#label3d');
+        let intersects = ray.intersectObjects(scene.children, true);
+        let found = false;
+        if (intersects.length > 1) {
+            found = intersects.find(x => x.object && x.object.name.startsWith("cube-"));
+            const labelObject = found && found.object;
+            if (labelObject && labelObject !== this.selectedObject) {
+                if (this.selectedObject) {
+                    this.selectedObject.material.color.setRGB( 0.3, 0.3, 0.3 );
+                }
+                this.selectedObject = labelObject;
+                labelObject.material.color.setRGB( 0.3, 0.5, 0.7 );
+
+
+                this.updateCirclePosition(labelObject);
+            }
+            /*let l3d = $('#label3d');
             if (labelObject.name === "") {
                 l3d.css('visibility','hidden');
             } else {
@@ -369,24 +440,59 @@ export default class Scene3d {
                 }
             }*/
         }
+        if (!found && this.selectedObject)  {
+            this.selectedObject.material.color.setRGB( 0.3, 0.3, 0.3 );
+            this.selectedObject = null;
+        }
+    }
+
+    updateCirclePosition(mesh) {
+        if (!mesh) return;
+        const annotation = document.querySelector('.annotation');
+        if (!clicked) {
+            annotation.style.display = 'nome';
+            return;
+        }
+        const vector = this.toScreenPosition(mesh, camera)
+
+        if (annotation.style.display === 'none') {
+            annotation.style.display = 'block';
+            annotation.style.opacity = '0.95'; //spriteBehindObject ? '0.5' : '1';
+        }
+        annotation.style.top = `${vector.y + 10}px`;
+        annotation.style.left = `${vector.x + 20}px`;
+        annotation.querySelector('h5').innerText = mesh.name.replace('cube-','');
+        annotation.querySelector('.info3d').innerText =
+            `${mesh.position.x.toFixed(2)}, ${mesh.position.y.toFixed(2)}, ${mesh.position.z.toFixed(2)}`;
+    }
+
+    updateAnnotationOpacity() {
+        // const meshDistance = camera.position.distanceTo(mesh.position);
+        // const spriteDistance = camera.position.distanceTo(sprite.position);
+        // spriteBehindObject = spriteDistance > meshDistance;
+        // sprite.material.opacity = spriteBehindObject ? 0.5 : 1;
+
+        // Do you want a number that changes size according to its position?
+        // Comment out the following line and the `::before` pseudo-element.
+        //sprite.material.opacity = 0;
     }
 
     ways(tick, timer) {
         //position along 3 ways
         const N = 3;
         const w = Math.floor(timer) % N;
-        const Z = -2.0 + w * 2.0;
+        const Z = -3.0 + w * 3.0;
         const ret = new THREE.Vector3()
-        ret.x = Math.sin(tick * spawnerOptions.horizontalSpeed * 2) * 2.5;
-        if (ret.x < 1.3) {
-            options.velocity.z = Math.random()*5.0 - 2.5
+        ret.x = - 1.5; //Math.sin(tick * spawnerOptions.horizontalSpeed * 2) * 2.5;
+        if (Math.random() < 0.5 && w < 2) {
+            options.velocity.z = Math.random() * 5.0 + 1.0
             options.velocity.x = 0.0
         } else {
             options.velocity.z = 0.0
-            options.velocity.x = Math.random()*5.0 - 2.5
+            options.velocity.x = Math.random() * 5.0 + 1.0
         }
         //options.position.y = Math.sin( tick * spawnerOptions.verticalSpeed ) * 2.0+1.0;
-        ret.y = -0.5;
+        ret.y = -1.0;
         //options.position.z = Math.sin( tick * spawnerOptions.horizontalSpeed + spawnerOptions.verticalSpeed ) * 1.2;
         //options.position.z = Math.round(Math.random()) * 4.0 - 2.0;
         //options.position.z = Math.sin( tick * spawnerOptions.horizontalSpeed + spawnerOptions.verticalSpeed ) * 1.2;
@@ -395,23 +501,29 @@ export default class Scene3d {
     }
 
     render() {
-        let timer = performance.now();
-        if (model.spheres) {
+        this.updateAnnotationOpacity();
+        this.updateCirclePosition(this.selectedObject);
+        if (this.model.spheres) {
             group.position.z = 0;
         } else {
             group.position.z = -100;
         }
-        group.rotation.x = timer * 0.0002;
-        group.rotation.y = timer * 0.0001;
+        let timer = performance.now();
+        if (!clicked) {
 
-        camera.position.x = cameraTarget.x + 7 * Math.cos( Math.PI/2 + Math.sin( timer * 0.0001));
-        camera.position.z = cameraTarget.z + 7 * Math.sin( Math.PI/2 + Math.sin( timer * 0.0001));
-        camera.position.y = 8 +  Math.sin( timer * 0.001);
-        camera.lookAt( cameraTarget );
+            group.rotation.x = timer * 0.0002;
+            group.rotation.y = timer * 0.0001;
 
-        //this.intersects();
+            camera.position.x = cameraTarget.x + 7 * Math.cos(Math.PI / 2 + Math.sin(timer * 0.0001));
+            camera.position.z = cameraTarget.z + 2 + 7 * Math.sin(Math.PI / 2 + Math.sin(timer * 0.0001));
+            camera.position.y = 8 + 0.5 * Math.sin(timer * 0.0001); // + timer*0.0001;
+            camera.lookAt(cameraTarget);
+        }
+        //if (Math.floor(timer) % 10 === 0) {
+            this.intersects();
+       //}
         //controls.update();
-        if (model.particles) {
+        if (this.model.particles) {
             //particle system
             let delta = clock.getDelta() * spawnerOptions.timeScale;
             tick += delta;
@@ -437,7 +549,7 @@ export default class Scene3d {
         this.timer1 = setTimeout(() => {
             requestAnimationFrame( () => this.animate() );
         }, 1000 / 30 );
-        //if (model.pageState === "page1") {
+        //if (this.model.pageState === "page1") {
             //this.stats.begin();
             this.render();
             //this.stats.end();

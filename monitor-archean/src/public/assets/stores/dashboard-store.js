@@ -89,7 +89,7 @@ const store = new Vuex.Store({
     getters: {
         focusedDeployments: state => {
             return state.filtering.focused ?
-                state.deployments.filter(d => d.metadata.labels['app-type']) :
+                state.deployments.filter(d => d.metadata.labels && d.metadata.labels['app-type']) :
                 state.deployments
         },
         focusedPods: (state, getters) => {
@@ -105,12 +105,13 @@ const store = new Vuex.Store({
                 state.apps
         },
         getPodsByDeploymentName: (state) => (name) => {
-            return state.pods.filter(pod => pod.metadata.labels.app === name)
+            return state.pods.filter(pod => pod.metadata.labels && pod.metadata.labels.app === name)
         },
         recentEvents: (state, getters) => {
             const ipWhitelist = getters.focusedPods.map(pod => pod.status.podIP)
             if  (state.filtering.focused) {
-                return state.events.filter(e => ipWhitelist.indexOf(e.data.status.podIP)>=0 || e.data.metadata.labels['app-type']).slice(-16).reverse()
+                return state.events.filter(e => ipWhitelist.indexOf(e.data.status.podIP)>=0 ||
+                    (e.data.metadata.labels && e.data.metadata.labels['app-type'])).slice(-16).reverse()
             } else {
                 return state.events.slice(-16).reverse()
             }

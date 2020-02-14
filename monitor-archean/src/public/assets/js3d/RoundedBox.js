@@ -551,4 +551,4 @@
 
     return RoundedBoxGeometry;
 
-})(THREE);
+})(window.THREE);
