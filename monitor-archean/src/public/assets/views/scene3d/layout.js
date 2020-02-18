@@ -1,55 +1,115 @@
 export const Layout = {
-    inject: ['stage'],
-    provide () {
+    name: "Layout",
+    inject: ["state3d", "ready"],
+    provide() {
         return {
-            scene: this.stage.scene
-        }
+            state3d: this.state3d,
+            numRows: this.numRows
+        };
     },
     rendered: false,
     render(h) {
-        const loaded = this.stage.status.loaded;
-        console.log("render() layout ", loaded)
-        if (!this.$options.rendered && loaded) {
-            this.stage.ref.stage3d.createCubes(this.stage.ref.scene);
-            //this.stage.ref.stage3d.createBox(0, 0, 3,3, "test", this.stage.ref.scene);
+        console.log("render Layout ", this.ready.loaded);
+        //"touching" `ready` prop to cause rendering when stage is ready
+        if (this.ready.loaded && !this.$options.rendered) {
             this.$options.rendered = true;
         }
-        return h('div', {style: {display: 'none'}}, loaded ? this.$slots.default : [])
+        //Layout needs some DOM content to track live changes
+        return h(
+            "div",
+            { style: { display: "none" } },
+            this.ready.loaded ? this.$slots.default : []
+        );
     },
-    mounted() {
-        console.log("layout mounted")
-        if (this.stage.status.loaded) {
-            this.stage.ref.stage3d.createCubes(this.stage.ref.scene);
+    methods: {
+        numRows() {
+            let arr = this.$slots.default;
+            if (!arr) return 0;
+            return arr.filter(slot => slot.tag).length;
         }
     }
-}
+};
 
 export const Row = {
-    inject: ['stage'],
-    provide () {
+    name: "Row",
+    inject: ["state3d", "numRows"],
+    provide() {
         return {
-            scene: this.stage.ref.scene
-        }
+            state3d: this.state3d,
+            numRows: this.numRows,
+            numBoxes: this.numBoxes,
+            rowIdx: this.rowIdx
+        };
+    },
+    idx: -1,
+    boxIndex: 0,
+    created() {
+        this.$options.idx = this.$parent.$children.findIndex(c => c === this);
     },
     render(h) {
-        console.log("render() row ", this.stage.ref.scene)
-        return h('div',this.$slots.default);
+        console.log("render Row ", this.rowIdx());
+        this.state3d.stage.adjustRow(this.rowIdx(), this.numBoxes());
+        return h("div", this.$slots.default);
     },
-    mounted() {
-        console.log("row  mounted")
+    methods: {
+        numBoxes() {
+            let arr = this.$slots.default;
+            if (!arr) return 0;
+            return arr.filter(slot => slot.tag).length;
+        },
+        rowIdx() {
+            return this.$options.idx;
+        }
     }
-}
+};
+
+const LayoutElement = {
+    props: ["name", "size"],
+    inject: ["state3d", "rowIdx", "numRows", "numBoxes"],
+    idx: -1,
+    created() {
+        this.$options.idx = this.$parent.$children.findIndex(c => c === this);
+    }
+};
 
 export const Box = {
-    props: ["name","data","size"],
-    inject: ['stage'],
+    name: "Box",
+    extends: LayoutElement,
     render(h) {
-        console.log("render() box "+this.name, this.stage.scene)
+        const numBoxes = this.numBoxes();
+        console.log("render box ", this.name, numBoxes);
+        if (numBoxes !== 0) {
+            this.state3d.stage.renderBox(
+                this.$options.idx,
+                this.rowIdx(),
+                numBoxes,
+                this.numRows(),
+                this.name,
+                this.size
+            );
+        }
         return null;
-    },
-    mounted() {
-        console.log("box "+this.name+" mounted", this.stage.scene)
     }
-}
+};
+
+export const Cylinder = {
+    name: "Cylinder",
+    extends: LayoutElement,
+    render(h) {
+        const numBoxes = this.numBoxes();
+        console.log("render cyl ", this.name, numBoxes);
+        if (numBoxes !== 0) {
+            this.state3d.stage.renderCylinder(
+                this.$options.idx,
+                this.rowIdx(),
+                numBoxes,
+                this.numRows(),
+                this.name,
+                this.size
+            );
+        }
+        return null;
+    }
+};
 
 

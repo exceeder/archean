@@ -5,6 +5,7 @@ metadata:
   labels:
     app: archean-monitor
     repo: archean-micros
+    tier: monitor
 spec:
   replicas: 1
   selector:

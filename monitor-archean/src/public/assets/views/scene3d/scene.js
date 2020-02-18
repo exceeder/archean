@@ -66,7 +66,6 @@ export default class Scene extends LifeCycle {
     {
         const vector = new THREE.Vector3();
 
-        // TODO: need to update this when resize window
         const canvas = this.renderer.domElement;
         const widthHalf = 0.5 * canvas.offsetWidth;
         const heightHalf = 0.5* canvas.offsetHeight;
@@ -118,7 +117,7 @@ export default class Scene extends LifeCycle {
             const intersects = ray.intersectObjects(this.scene.children, true);
             let found = false;
             if (intersects.length > 1) {
-                found = intersects.find(x => x.object && x.object.name.startsWith("cube-"));
+                found = intersects.find(x => x.object && x.object.name.startsWith("el-"));
                 const labelObject = found && found.object;
                 if (labelObject && labelObject !== this.selectedObject) {
                     if (this.selectedObject) {

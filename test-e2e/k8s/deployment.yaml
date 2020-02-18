@@ -5,6 +5,8 @@ metadata:
   labels:
     app: test-e2e
     repo: archean-micros
+    app-type: test
+    tier: monitor
 spec:
   replicas: 1
   selector:

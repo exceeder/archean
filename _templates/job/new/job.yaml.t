@@ -9,6 +9,8 @@ metadata:
   labels:
     app: <%= name %>
     repo: archean-micros
+    app-type: job
+    tier: jobs
 spec:
   schedule: "*/1 * * * *"
   successfulJobsHistoryLimit: 3

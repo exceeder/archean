@@ -32,7 +32,7 @@ export default class LifeCycle {
         clearTimeout(this.lifecycle._timeouut);
         this.lifecycle._timeouut = setTimeout(() => {
             requestAnimationFrame( () => this.animate() );
-        }, 1000 / 30 );
+        }, 1000 / 25 );
 
         const timer = this.lifecycle.timer;
         const t = performance.now();

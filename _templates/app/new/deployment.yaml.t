@@ -10,6 +10,7 @@ metadata:
     app: <%= name %>
     repo: archean-micros
     app-type: micro
+    tier: middle
 spec:
   replicas: 1
   selector:

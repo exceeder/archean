@@ -38,23 +38,19 @@ export default {
     },
     data() {
       return {
-          status: {
+          state: {
               loaded: false
           }
       }
     },
-    stage: {
-        scene: null,
-        stage3d: null
+    state3d: {
+        stage: null
     },
-    provide () {
+    provide() {
         return {
-            stage: {
-                ref: this.$options.stage,
-                status: this.status
-            },
-
-        }
+            state3d: this.$options.state3d,
+            ready: this.state
+        };
     },
     mounted() {
         lazyLoadThreeJs(Stage => {
@@ -63,11 +59,10 @@ export default {
     },
     methods: {
         lazyInit(stage) {
-            this.$options.stage.scene = stage.scene; //Three.Scene
-            this.$options.stage.stage3d = stage; //./Stage
-            this.status.loaded = true;
+            this.$options.state3d.stage = stage; //./Stage
+            this.state.loaded = true;
             console.log("Scene loaded");
-            stage.mount(stage.scene);
+            stage.mount();
             stage.start();
 
         },

@@ -27,6 +27,9 @@ spec:
       containers:
         - name: master
           image: postgres
+          env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: "trust"
           resources:
             requests:
               cpu: 100m

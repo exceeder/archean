@@ -55,6 +55,24 @@ app.get("/archean/v1/deployments", async (req, res) => {
     }
 })
 
+app.get("/archean/v1/services", async (req, res) => {
+    try {
+        const services = await client.api.v1.namespaces(kubeNamespace).services.get()
+        res.contentType("application/json").send(JSON.stringify(services))
+    } catch (e) {
+        sendError(res, e)
+    }
+})
+
+app.get("/archean/v1/metrics", async (req, res) => {
+    try {
+        const metrics = await client.apis["metrics.k8s.io"].v1beta1.namespaces(kubeNamespace).pods.get();
+        res.contentType("application/json").send(JSON.stringify(metrics))
+    } catch (e) {
+        sendError(res, e)
+    }
+})
+
 app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     try {
         let logs = await client.api.v1.namespaces(kubeNamespace).pods(req.params.name).log.get()

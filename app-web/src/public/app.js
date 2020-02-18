@@ -4,7 +4,7 @@ new Vue({
       <section class="container">
           <h2>Vue Web App</h2>
           <p>
-            The card below contains the response from a microservice in 'app-hello/' directory.            
+            This card below contains the response from a microservice in 'app-hello/' directory.            
           </p>          
           <div class="row">          
             <div class="col s12 m6">

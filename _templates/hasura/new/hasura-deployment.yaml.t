@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: master
-          image: hasura/graphql-engine:v1.0.0-rc.1
+          image: hasura/graphql-engine:v1.0.0
           env:
             - name: HASURA_GRAPHQL_DATABASE_URL
               value: 'postgres://postgres:@backend-postgres:5432/postgres'

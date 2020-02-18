@@ -5,6 +5,7 @@ metadata:
   labels:
     app: api-gateway
     repo: archean-micros
+    tier: frontend
 spec:
   replicas: 1
   selector:

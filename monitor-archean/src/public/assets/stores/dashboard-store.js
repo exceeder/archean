@@ -1,5 +1,7 @@
 const fetchApps = () => fetch("/v1/api-gateway/targets").then(res => res.json())
 const fetchPods = () => fetch("/archean/v1/pods").then(res => res.json())
+const fetchMetrics = () => fetch("/archean/v1/metrics").then(res => res.json())
+const fetchServices = () => fetch("/archean/v1/services").then(res => res.json())
 const fetchDeployments = () => fetch("/archean/v1/deployments").then(res => res.json())
 const fetchRedisStats = () => fetch("/archean/v1/redis-stats").then(res => res.json())
 
@@ -10,6 +12,8 @@ const store = new Vuex.Store({
         deployments: [],
         stats: [],
         events: [],
+        services: [],
+        metrics: [],
         filtering: {
             focused: true
             //in the future, search terms etc. belong here
@@ -30,6 +34,9 @@ const store = new Vuex.Store({
         },
         deployments(state, payload) {
             state.deployments = payload
+        },
+        metrics(state, payload) {
+            state.metrics = payload
         },
         addPod(state, payload) {
             let idx = state.pods.map(d => d.metadata.name).indexOf(payload.metadata.name)
@@ -69,6 +76,16 @@ const store = new Vuex.Store({
                 .then(res => context.commit('pods', res.body.items))
                 .catch(e => console.log(e))
         },
+        updateMetrics(context) {
+            fetchMetrics()
+                .then(res => context.commit('metrics', res.body.items))
+                .catch(e => console.log(e))
+        },
+        updateServices(context) {
+            fetchServices()
+                .then(res => context.commit('services', res.body.items))
+                .catch(e => console.log(e))
+        },
         updateDeployments(context) {
             fetchDeployments()
                 .then(res => context.commit('deployments', res.body.items))
@@ -105,7 +122,15 @@ const store = new Vuex.Store({
                 state.apps
         },
         getPodsByDeploymentName: (state) => (name) => {
-            return state.pods.filter(pod => pod.metadata.labels && pod.metadata.labels.app === name)
+            const deployment = state.deployments.filter(d => d.metadata.labels && d.metadata.name === name)[0];
+            const appName = deployment && deployment.metadata.labels.app;
+            const pods = state.pods.filter(pod => pod.metadata.labels && pod.metadata.labels.app === appName);
+            pods.forEach(p => {
+                const metrics = state.metrics.filter(m => m.metadata.name === p.metadata.name);
+                console.log("metrics",metrics,state.metrics)
+                p.metrics = metrics.length > 0 ? metrics[0].containers[0].usage : {};
+            })
+            return pods;
         },
         recentEvents: (state, getters) => {
             const ipWhitelist = getters.focusedPods.map(pod => pod.status.podIP)

@@ -1,6 +1,6 @@
 import store from "../stores/dashboard-store.js"
 import annotation from "./cards/annotation.js"
-import {Row,Box,Layout} from "./scene3d/layout.js"
+import {Row, Box, Layout, Cylinder} from "./scene3d/layout.js"
 import stage3d from "./scene3d/stage3d.js"
 
 //on this level, app business logic is provided
@@ -12,7 +12,13 @@ export default {
       <!-- things -->
       <Layout>
         <Row>
-          <Box v-for="pod in pods" :key="pod.status.podIP" :name="pod.metadata.labels.app"/> 
+          <Box name="api-gateway" /> 
+        </Row> 
+        <Row>
+          <Box v-for="d in deployments" :key="d.metadata.uid" :name="d.metadata.labels.app" /> 
+        </Row> 
+        <Row>
+           <Cylinder name="Redis" /> 
         </Row>     
       </Layout>
       <!-- annotation popups -->   
@@ -23,12 +29,13 @@ export default {
 </section>
 `,
     store,
-    components: {stage3d, annotation, Row, Box, Layout},
+    components: {stage3d, annotation, Row, Box, Layout, Cylinder},
     mounted() {
         store.dispatch("updatePods");
     },
     computed: {
-        deployments: () => store.state.deployments,
+        types: () => ['edge', 'micro', 'backend'],
+        deployments: () => store.state.deployments.filter(d => d.metadata.labels['app-type'] === 'micro'),
         pods: () => store.state.pods
     }
 }

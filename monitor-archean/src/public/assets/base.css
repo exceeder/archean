@@ -107,7 +107,7 @@ video {
 .annotation {
     position: fixed;
     display: inline-block;
-    width: 15em;
+    width: 20em;
     line-height: 1.0;
     font-size:0.9em;
     border: #fff 1px solid;

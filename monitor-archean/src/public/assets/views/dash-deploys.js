@@ -19,7 +19,9 @@ export default {
            <li>
               <br/>
               <span v-for="pod in pods(dep)" :key="pod.status.podIP" class="chip" @click="podClick(pod)">
-                {{pod.status.podIP}} {{pod.status.phase}}
+                {{pod.status.podIP}} 
+                <i v-if="pod.metrics">{{fmtCpu(pod.metrics.cpu)}}  {{fmtMem(pod.metrics.memory)}}</i>
+                <i v-else>{{pod.status.phase}}</i>       
               </span>
            </li>
        </ul>
@@ -42,11 +44,26 @@ export default {
         deployments () { return store.getters.focusedDeployments }
     },
     methods: {
-        refreshDeployments: () => store.dispatch('updateDeployments'),
+        refreshDeployments: () => {
+            store.dispatch('updateDeployments')
+            store.dispatch('updateMetrics')
+        },
         pods(dep) { return store.getters.getPodsByDeploymentName(dep.metadata.name) },
         podClick(pod) {
             this.modalData = pod.metadata
             this.modalVisible = true
+        },
+        fmtMem(str) {
+            if (str && str.endsWith("Ki")) {
+                return (str.substring(0, str.length-2) / 1000).toFixed(2)+"M"
+            } else
+                return str;
+        },
+        fmtCpu(str) {
+            if (str && str.endsWith("n")) {
+                return (str.substring(0, str.length-1) / 1000).toFixed(1)+"m"
+            } else
+                return str;
         }
     }
 }

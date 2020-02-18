@@ -4,6 +4,7 @@ const ping = {
     eventType: 'PING',
     handle() {
         store.dispatch('updateApps'); //update micros tab
+        store.dispatch('updateMetrics'); //update micros tab
     }
 }
 
