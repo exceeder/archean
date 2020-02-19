@@ -16,7 +16,6 @@ export default class Stage extends Scene {
         this.model = model
     }
 
-
     mount() {
         const scene = this.scene;
         this.createFloor(scene)
@@ -88,7 +87,7 @@ export default class Stage extends Scene {
         const R = Rw * textureSize / mirrorSize * textureRepeats
         const D = Dw * textureSize / mirrorSize * textureRepeats
         let NLayers = this.layout.length
-        texture.context.font = "bold 32px Helvetica"
+        texture.context.font = "bold "+Math.floor(textureSize/128)+"px Helvetica"
         for (let i = 0; i < NLayers; i++) {
             let row = this.layout[i];
             let NBoxes = row.length;

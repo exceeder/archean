@@ -13,12 +13,12 @@ body > div#app {
 .container {
     max-width: calc(100vw - 2em);
 }
+
 @media only screen and (min-width: 993px)  {
     .container {
         width: calc(100vw - 2em);
     }
 }
-
 .tab {
     max-width: 100vw;
     max-height: 90vh;
@@ -55,6 +55,34 @@ main > .container { margin-top: 10px; }
 .sub-card:first-child {
     /*border-left:none;*/
 }
+
+
+@media only screen and (max-width: 800px)  {
+    .container { width: 100%;
+        max-width: calc(100vw - 1em);
+    }
+    .card {
+        flex: 1 1 16em;
+        box-sizing: border-box;
+        margin: 0.5rem .125em;
+        overflow: hidden;
+        max-height: calc(100vh - 120px);
+    }
+    .card .card-content {
+        padding:10px;
+    }
+    .card .card-conent .card-title {
+        line-height: 16px;
+        margin-bottom: 4px;
+    }
+    .chip {
+        max-width: 44vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 
 .right-vertical {
     height: calc(100vh - 12em);
@@ -93,6 +121,8 @@ main > .container { margin-top: 10px; }
 video {
     outline: none;
 }
+
+
 
 /* --- 3d --- */
 .canvas3d {

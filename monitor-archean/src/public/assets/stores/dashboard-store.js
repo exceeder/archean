@@ -127,7 +127,6 @@ const store = new Vuex.Store({
             const pods = state.pods.filter(pod => pod.metadata.labels && pod.metadata.labels.app === appName);
             pods.forEach(p => {
                 const metrics = state.metrics.filter(m => m.metadata.name === p.metadata.name);
-                console.log("metrics",metrics,state.metrics)
                 p.metrics = metrics.length > 0 ? metrics[0].containers[0].usage : {};
             })
             return pods;

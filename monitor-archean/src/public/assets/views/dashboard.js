@@ -8,28 +8,27 @@ import initSSE from "../eventsource/sse.js"
 
 export default { template: `
      <div class="dashboard"> 
-        <modal v-if="modalVisible" @close="modalVisible = false" :data="modalData"/>       
+        <modal v-if="modalVisible" @close="modalVisible = false" :data="modalData"/>
         <div class="tab" v-show="'monitor' === activeTab">
             <div class="row">
-            <div class="col s8">             
-            <div class="flex-wrap">           
-               <app-card style="width:100%">
-                   <div style="display:block; height: 2em">
-                       <span class="left">Gateway Rules</span>
-                       <lever labelOff="All" labelOn="Focused" :value.sync="filtered"/>   
-                   </div>                         
-                   <apps :filtered="filtered"/>                                  
-               </app-card>
-            </div>                                       
-<!--            <pods v-bind:filtered="filtered"/>-->
-            <deployments :filtered="filtered"/>
+            <div class="col s12 m8">             
+                <div class="flex-wrap hide-on-small-only">           
+                   <app-card style="width:100%">
+                       <div style="display:block; height: 2em">
+                           <span class="left">Gateway Rules</span>
+                           <lever labelOff="All" labelOn="Focused" :value.sync="filtered"/>   
+                       </div>                         
+                       <apps :filtered="filtered"/>                                  
+                   </app-card>
+                </div>                                       
+                <deployments :filtered="filtered"/>
             </div>
-            <div class="col s4">
+            <div class="col m4 hide-on-small-only">
               <div class="card right-vertical" style="">
                 <b>Events</b>
                 <div class="collection">
                   <div class="collection-item" v-for="ev in $store.getters.recentEvents" @click="showDetails(ev)">
-                    <i style="color:#ccc">{{ago(ev.ts)}} </i> <span> {{ev.etype}}  {{ev.action}} {{ev.type}} <i>{{ev.name}}</i> </span>
+                    <i style="color:#ccc">{{ago(ev.ts)}} </i> <span> {{ev.etype}}  {{ev.action}} <i>{{ev.name}}</i> </span>
                   </div>
                 </div>
               </div>
@@ -75,8 +74,8 @@ export default { template: `
         ago(ts) {
             const time = new Date(ts)
             const hh = time.getHours();
-            const mm = time.getMinutes();
-            const ss = time.getSeconds();
+            const mm = time.getMinutes().toFixed(0).padStart(2, '0');
+            const ss = time.getSeconds().toFixed(0).padStart(2, '0');
             return `${hh}:${mm}:${ss}`
         },
         showDetails(ev) {

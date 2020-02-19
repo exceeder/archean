@@ -12,6 +12,17 @@ let client = null;
 
 app.use('/archean', express.static(path.join(__dirname, 'public')))
 
+const getAnsiStripRegExp = () => {
+    const pattern = [
+        '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
+        '(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
+    ].join('|');
+
+    return new RegExp(pattern, 'g');
+};
+const ansiRegExp = getAnsiStripRegExp();
+const stripAnsiCodes = str => str.replace(ansiRegExp, '')
+
 const convertPlainTextPropertiesToObject = text => text.split("\n")
     .map(l => l.split(":"))
     .filter(s => s.length > 1)
@@ -73,10 +84,26 @@ app.get("/archean/v1/metrics", async (req, res) => {
     }
 })
 
+app.get("/archean/v1/metrics/:name", async (req, res) => {
+    try {
+        const metrics = await client.apis["metrics.k8s.io"].v1beta1.namespaces(kubeNamespace).pods(req.params.name).get()
+        let result;
+        if (metrics.body.containers && metrics.body.containers.length > 0) {
+            result = metrics.body.containers[0].usage
+        } else {
+            result = {}
+        }
+        res.contentType("application/json").send(JSON.stringify(result))
+    } catch (e) {
+        sendError(res, e)
+    }
+})
+
 app.get("/archean/v1/pods/:name/logs", async (req, res) => {
     try {
         let logs = await client.api.v1.namespaces(kubeNamespace).pods(req.params.name).log.get()
-        res.contentType("text/simple").send(logs.body)
+        const result = stripAnsiCodes(logs.body)
+        res.contentType("text/simple").send(result)
     } catch (e) {
         sendError(res, e)
     }

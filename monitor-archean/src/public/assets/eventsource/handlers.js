@@ -1,10 +1,15 @@
 import store from '../stores/dashboard-store.js';
 
+let timeout = null;
+
 const ping = {
     eventType: 'PING',
     handle() {
-        store.dispatch('updateApps'); //update micros tab
-        store.dispatch('updateMetrics'); //update micros tab
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            store.dispatch('updateApps'); //update micros tab
+            store.dispatch('updateMetrics')
+        }, 500);
     }
 }
 
