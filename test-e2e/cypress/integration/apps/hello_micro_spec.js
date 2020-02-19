@@ -6,18 +6,17 @@ describe('Hello app works', function () {
         cy.request('http://api-gateway:3000/hello').as('hello')
     })
 
-    it('returns JSON', function () {
+    it('returns JSON headers', function () {
         cy.get('@hello')
             .its('headers')
             .its('content-type')
             .should('include', 'application/json')
     })
 
-    it('returns hello property', function () {
+    it('returns hello ', function () {
         cy.get('@hello')
             .its('body')
-            .its('hello')
-            .should('not.equal', '')
-            .should('not.be.null')
+            .its('hello').should("eq","World!")
+            .its("ip").should('not.be.null')
     })
 })

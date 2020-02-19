@@ -7,7 +7,7 @@ let redis = null;
 let cypress = null;
 
 async function spawnCypress() {
-    cypress = require('child_process').spawn('cypress', ['run'], {
+    cypress = require('child_process').spawn('cypress', ["run", "--spec", "cypress/integration/apps/**/*"], {
         detached: true
     });
 
