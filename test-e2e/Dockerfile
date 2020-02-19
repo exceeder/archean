@@ -1,4 +1,4 @@
-FROM cypress/included:3.6.1 AS base
+FROM cypress/included:3.8.3 AS base
 LABEL "net.archean.type"="Testing"
 WORKDIR /e2e
 COPY *.json /e2e/
