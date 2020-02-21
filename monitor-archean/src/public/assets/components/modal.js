@@ -3,7 +3,7 @@ export default Vue.component('modal', { template: `
         <div class="modal-content">
          <h5 v-if="title" @click="$emit('close')">{{ title }}</h5>
          <slot></slot>
-         <pre v-if="typeof(data) === 'string'" v-html="data"></pre>
+         <pre v-if="typeof(data) === 'string'" v-text="data"></pre>
          <pre v-else>{{  JSON.stringify(data,0,2) }}</pre>
         </div>
         <div class="modal-footer">

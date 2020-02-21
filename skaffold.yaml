@@ -2,30 +2,48 @@
 apiVersion: skaffold/v1
 kind: Config
 build:
+  local:
+    push: false
+#    concurrency: 2
   artifacts:
-    - image: app-web
-      context: ./app-web/
-    - image: app-hello
-      context: ./app-hello/
-    - image: api-gateway
-      context: ./api-gateway/
-    - image: archean-monitor
-      context: ./monitor-archean/
-      sync:
-        manual:
-          - src: 'src/**/*'
-            dest: .
-    - image: test-e2e
-      context: ./test-e2e/
-      sync:
-        manual:
-          - src: 'cypress/**/*.js'
-            dest: .
+  - image: app-hello
+    context: ./app-hello/
+  - image: api-gateway
+    context: ./api-gateway/
+  - image: archean-monitor
+    context: ./monitor-archean/
+    sync:
+      infer:
+        - 'src/**/*'
+  - image: test-e2e
+    context: ./test-e2e/
+    sync:
+      infer:
+        - 'cypress/**/*.js'
 
 deploy:
   kustomize: {}
 
 profiles:
+  - name: hotweb
+    build:
+      artifacts:
+      - image: app-hello
+        context: ./app-hello/
+      - image: api-gateway
+        context: ./api-gateway/
+      - image: archean-monitor
+        context: ./monitor-archean/
+        sync:
+          infer:
+            - 'src/**/*'
+      - image: app-web
+        context: ./app-web/
+        docker:
+          target: prod
+    deploy:
+      kubeContext: docker-desktop
+
   - name: gcp
     build:
       googleCloudBuild:

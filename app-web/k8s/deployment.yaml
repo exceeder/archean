@@ -29,8 +29,8 @@ spec:
                 fieldPath: status.podIP
           resources:
             requests:
-              memory: "32Mi"
-              cpu: "10m"
+              memory: "1024Mi"
+              cpu: "4000m"
           livenessProbe:
             tcpSocket:
               port: 3000
