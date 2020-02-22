@@ -6,20 +6,20 @@ build:
     push: false
 #    concurrency: 2
   artifacts:
-  - image: app-hello
-    context: ./app-hello/
-  - image: api-gateway
-    context: ./api-gateway/
-  - image: archean-monitor
-    context: ./monitor-archean/
-    sync:
-      infer:
-        - 'src/**/*'
-  - image: test-e2e
-    context: ./test-e2e/
-    sync:
-      infer:
-        - 'cypress/**/*.js'
+    - image: app-hello
+      context: ./app-hello/
+    - image: api-gateway
+      context: ./api-gateway/
+    - image: archean-monitor
+      context: ./monitor-archean/
+      sync:
+        infer:
+          - 'src/**/*'
+    - image: test-e2e
+      context: ./test-e2e/
+      sync:
+        infer:
+          - 'cypress/**/*.js'
 
 deploy:
   kustomize: {}
