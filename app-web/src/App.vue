@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-content>
+    <v-main>
       <v-layout>
         <v-flex xs12 sm6 offset-sm3>
 
@@ -21,15 +21,27 @@
                 <v-btn outlined color="orange lighten-2" href="/archean/index.html" target="_blank">Open Monitor</v-btn>
             </v-card-actions>
           </v-card>
+
+          <v-card dark class="ma-4" color="blue-grey darken-1">
+            <v-card-text>
+              <todo/>
+            </v-card-text>
+          </v-card>
         </v-flex>
       </v-layout>
-    </v-content>
+    </v-main>
   </v-app>
 </template>
 
 <script>
+import ApolloExample from "@/components/ApolloExample"
+
     export default {
         name: 'App',
+
+        components: {
+          todo: ApolloExample
+        },
 
         data: () => ({
             message: { hello:"..." }

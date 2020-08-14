@@ -5,8 +5,8 @@ build:
   local:
     push: false
   artifacts:
-    - image: app-web
-      context: ./app-web/
+#    - image: app-web
+#      context: ./app-web/
     - image: app-hello
       context: ./app-hello/
     - image: api-gateway
@@ -38,10 +38,10 @@ profiles:
         sync:
           infer:
             - 'src/**/*'
-      - image: app-web
-        context: ./app-web/
-        docker:
-          target: prod
+#      - image: app-web
+#        context: ./app-web/
+#        docker:
+#          target: prod
     deploy:
       kubeContext: docker-desktop
 

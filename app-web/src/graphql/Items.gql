@@ -1,0 +1,7 @@
+query Items {
+  Items {
+    id
+    item
+    status
+  }
+}

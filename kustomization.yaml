@@ -1,7 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - app-web/k8s/deployment.yaml
+  - backend-postgres/k8s/deployment.yaml
+  - backend-postgres/k8s/service.yaml
+  - backend-hasura/k8s/deployment.yaml
+  - backend-hasura/k8s/service.yaml
+#  - app-web/k8s/deployment.yaml
   - backend-redis/k8s/deployment.yaml
   - backend-redis/k8s/service.yaml
   - api-gateway/k8s/deployment.yaml
