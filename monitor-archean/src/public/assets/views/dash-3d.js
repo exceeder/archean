@@ -7,7 +7,7 @@ import stage3d from "./scene3d/stage3d.js"
 
 export default {
     template: `
-<section>
+<section>   
     <stage3d>
       <!-- things -->
       <Layout>
@@ -18,7 +18,7 @@ export default {
           <Box v-for="d in deployments" :key="d.metadata.uid" :name="d.metadata.labels.app" /> 
         </Row> 
         <Row>
-           <Cylinder name="Redis" /> 
+           <Cylinder name="Redis"/> 
         </Row>     
       </Layout>
       <!-- annotation popups -->   

@@ -139,7 +139,7 @@ export default class Scene extends LifeCycle {
         return (timer, tick) => {
             this.camera.position.x = this.cameraTarget.x + 3 * Math.cos(Math.PI / 2 + Math.sin(timer * 0.00001));
             this.camera.position.z = this.cameraTarget.z + 3 + 2 * Math.sin(Math.PI / 2 + Math.sin(timer * 0.00001));
-            this.camera.position.y = 10 + 0.5 * Math.sin(timer * 0.00001); // + timer*0.0001;
+            this.camera.position.y = 12 + 0.5 * Math.sin(timer * 0.00001); // + timer*0.0001;
             this.camera.lookAt(this.cameraTarget);
         }
     }

@@ -141,7 +141,7 @@ export default class Stage extends Scene {
             while (NBoxes < this.layout[i].length) {
                 this.scene.remove(this.layout[i].pop());
             }
-            //rcalculate remaining
+            //recalculate remaining
             this.layout[i].forEach((box, j) => {
                 box.position.z = (-NBoxes * (R + D)) / 2 + (R + D) * j + (R + D) / 2;
             });
@@ -151,7 +151,7 @@ export default class Stage extends Scene {
 
     ensureLayout(i, NBoxes) {
         const scene = this.scene;
-        if (this.layout.length <= i) {
+        while (this.layout.length <= i) {
             this.layout.push([]);
         }
         while (this.layout[i].length > NBoxes) {
@@ -178,52 +178,66 @@ export default class Stage extends Scene {
     }
 
     renderBox(j, i, NBoxes, NLayers, name, size = R) {
+
         const scene = this.scene;
         this.ensureLayout(i, NBoxes);
-        const bMaterial = this.createElementMaterial();
+        let box = scene.getObjectByName("el-" + name);
+        if (!box) {
+            const bMaterial = this.createElementMaterial();
 
-        //let box = new THREE.Mesh(new THREE.BoxGeometry(R, R / 2, size), bMaterial);
-        let box = new THREE.Mesh(new RoundedBoxGeometry(R, R / 2, R, .1, 5), bMaterial);
-        box.name = "el-" + name;
-        this.positionLayoutElement(box, j, i, NBoxes, NLayers);
-        box.castShadow = true;
-
-        this.layout[i].push(box);
-        scene.add(box);
+            //let box = new THREE.Mesh(new THREE.BoxGeometry(R, R / 2, size), bMaterial);
+            let box = new THREE.Mesh(new RoundedBoxGeometry(R, R / 2, R, .1, 5), bMaterial);
+            box.name = "el-" + name;
+            this.positionLayoutElement(box, j, i, NBoxes, NLayers);
+            box.castShadow = true;
+            this.layout[i].push(box);
+            scene.add(box);
+        } else {
+            this.positionLayoutElement(box, j, i, NBoxes, NLayers);
+        }
         this.updateDescriptions();
+        return box;
     }
 
     renderCylinder(j, i, NBoxes, NLayers, name, size = R) {
         const scene = this.scene;
         this.ensureLayout(i, NBoxes);
+        let el = scene.getObjectByName("el-" + name);
+        if (!el) {
+            let bMaterial = this.createElementMaterial();
 
-        let bMaterial = this.createElementMaterial();
-        let group = new THREE.Group();
+            let cyl1 = new THREE.Mesh(
+                new THREE.CylinderGeometry(size / 2, R / 2, R / 5, 32),
+                bMaterial
+            );
+            this.positionLayoutElement(cyl1, j, i, NBoxes, NLayers);
+            cyl1.position.y -= R / 4;
+            cyl1.name = "subel-" + name;
 
-        let cyl1 = new THREE.Mesh(
-            new THREE.CylinderGeometry(size / 2, R / 2, R /5, 32),
-            bMaterial
-        );
-        this.positionLayoutElement(cyl1, j, i, NBoxes, NLayers);
-        cyl1.position.y -= R/4;
-        cyl1.name="el-"+name;
+            let cyl2 = new THREE.Mesh(
+                new THREE.CylinderGeometry(size / 2, R / 2, R / 5, 32),
+                bMaterial
+            );
+            this.positionLayoutElement(cyl2, j, i, NBoxes, NLayers);
+            cyl2.name = "subel-" + name;
 
-        let cyl2 = new THREE.Mesh(
-            new THREE.CylinderGeometry(size / 2, R / 2, R / 5, 32),
-            bMaterial
-        );
-        this.positionLayoutElement(cyl2, j, i, NBoxes, NLayers);
-        cyl2.name="el-"+name;
+            let group = new THREE.Group();
+            group.add(cyl1);
+            group.add(cyl2);
+            group.material = bMaterial;
+            group.name = "el-" + name;
+            group.castShadow = true;
 
-        group.add(cyl1);
-        group.add(cyl2);
-        group.material = bMaterial;
-        group.name = "el-" + name;
-        group.castShadow = true;
-
-        this.layout[i].push(group);
-        scene.add(group);
+            this.layout[i].push(group);
+            scene.add(group);
+            el = group;
+        } else {
+            el.children.forEach(c => {
+                this.positionLayoutElement(c, j, i, NBoxes, NLayers);
+            })
+        }
         this.updateDescriptions();
+        return el;
     }
 
 // --- events ---
