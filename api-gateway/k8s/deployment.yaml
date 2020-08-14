@@ -25,10 +25,9 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              memory: "32Mi"
-              cpu: "10m"
+              memory: "64Mi"
+              cpu: "100m"
           livenessProbe:
-            tcpSocket:
+            httpGet:
               port: 3000
-            initialDelaySeconds: 3
-            periodSeconds: 5
+              path: /healthy

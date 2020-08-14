@@ -10,6 +10,11 @@ const proxy = new Proxy({gatewayURL: "http://localhost:30000"});
 const defaultRedirect = (req, res) => res.redirect("/archean")
 const gatewayTargetsApi = (req, res) => res.contentType("application/json").send(JSON.stringify(registry.targets));
 
+app.get("/healthy", (req, res) => {
+    res.json({ok:true})
+})
+
+
 app.use("/", async (req, res) => {
     if (req.originalUrl === "/v1/api-gateway/targets") {
         gatewayTargetsApi(req,res);
