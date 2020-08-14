@@ -8,8 +8,8 @@
             <v-card-title>app-web demo</v-card-title>
             <v-card-text>
               <p>This web application is an example how to develop a frontend against
-                a set of microservices using WebPack (here, Vuetify). It's source code is in `web-app/` directory.
-                Develop with `npm run serve`, deploy with `skaffold dev -p prod`.
+                a set of microservices using WebPack and Vuetify. It's source code is in `web-app/` module
+                directory. Develop with `npm run serve` and `skaffold dev`, deploy with `skaffold run -p prod`.
               </p>
               <p>Hello app says: <b>Hello, {{ message.hello }}</b></p>
               <p>From IP: <b>{{ message.ip }}</b></p>
