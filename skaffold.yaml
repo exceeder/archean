@@ -4,8 +4,9 @@ kind: Config
 build:
   local:
     push: false
-#    concurrency: 2
   artifacts:
+    - image: app-web
+      context: ./app-web/
     - image: app-hello
       context: ./app-hello/
     - image: api-gateway
@@ -15,11 +16,11 @@ build:
       sync:
         infer:
           - 'src/**/*'
-    - image: test-e2e
-      context: ./test-e2e/
-      sync:
-        infer:
-          - 'cypress/**/*.js'
+#    - image: test-e2e
+#      context: ./test-e2e/
+#      sync:
+#        infer:
+#          - 'cypress/**/*.js'
 
 deploy:
   kustomize: {}

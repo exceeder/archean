@@ -176,3 +176,11 @@ hygen micro new <some-name>
 1. Improve k8s event handling, show stopping/starting containers, animate
 3. Fix / cleanup 3d overview
 5. Gamify?
+
+Path to cli:
+
+1. Lerna?
+2. node-ci?
+3. arc init : _templates, skaffold, kustomize
+4. arc ui: connect remotely (?) feed events
+5. arc deploy: start in containers
