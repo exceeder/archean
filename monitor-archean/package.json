@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "kubernetes-client": "^8.3.5",
     "nodemon": "^1.19.4",
     "redis": "^2.8.0",
